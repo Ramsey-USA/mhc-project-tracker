@@ -1,0 +1,1 @@
+if (daysUntil <= 1) return 'urgent';  // Change to 2 for 48-hour alerts
