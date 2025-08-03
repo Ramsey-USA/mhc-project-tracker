@@ -320,7 +320,11 @@ function initializeData() {
             startDate: '2024-01-15',
             endDate: '2024-08-30',
             description: 'Modern office complex with 150,000 sq ft of space',
-            notes: 'Client requested eco-friendly materials'
+            notes: 'Client requested eco-friendly materials',
+            budget: 2500000,
+            spent: 1800000,
+            progress: 72,
+            phase: 'Interior Finishes'
         },
         {
             id: 'makayla-job2',
@@ -330,7 +334,11 @@ function initializeData() {
             startDate: '2024-03-01',
             endDate: '2024-10-15',
             description: 'Shopping center with 12 retail units',
-            notes: 'Phase 1 completion targeted for September'
+            notes: 'Phase 1 completion targeted for September',
+            budget: 3200000,
+            spent: 1600000,
+            progress: 50,
+            phase: 'Structural Work'
         },
         {
             id: 'ben-job1',
@@ -340,7 +348,11 @@ function initializeData() {
             startDate: '2024-02-01',
             endDate: '2024-09-30',
             description: 'Expanding existing warehouse by 50,000 sq ft',
-            notes: 'Working around operational constraints'
+            notes: 'Working around operational constraints',
+            budget: 1800000,
+            spent: 1350000,
+            progress: 75,
+            phase: 'Final Systems'
         },
         {
             id: 'ben-job2',
@@ -350,7 +362,11 @@ function initializeData() {
             startDate: '2024-04-01',
             endDate: '2024-12-15',
             description: 'New manufacturing facility with clean room requirements',
-            notes: 'Specialized HVAC systems required'
+            notes: 'Specialized HVAC systems required',
+            budget: 4500000,
+            spent: 1800000,
+            progress: 40,
+            phase: 'MEP Installation'
         },
         {
             id: 'ben-job3',
@@ -360,7 +376,11 @@ function initializeData() {
             startDate: '2024-05-15',
             endDate: '2025-01-30',
             description: 'Automated distribution center with conveyor systems',
-            notes: 'Integration with existing logistics network'
+            notes: 'Integration with existing logistics network',
+            budget: 3800000,
+            spent: 1140000,
+            progress: 30,
+            phase: 'Foundation & Structure'
         },
         {
             id: 'jeremy-darigold',
@@ -370,7 +390,11 @@ function initializeData() {
             startDate: '2024-01-01',
             endDate: '2024-11-30',
             description: 'Dairy processing facility upgrade and expansion',
-            notes: 'Food safety compliance critical'
+            notes: 'Food safety compliance critical',
+            budget: 5200000,
+            spent: 4160000,
+            progress: 80,
+            phase: 'Equipment Installation'
         }
     ];
 
@@ -1474,6 +1498,795 @@ function updateProjectDropdowns() {
             select.value = currentValue;
         }
     });
+}
+
+// Enhanced Analytics System
+let analyticsData = {
+    period: 30,
+    metrics: {},
+    notifications: []
+};
+
+// Initialize analytics
+function initializeAnalytics() {
+    loadNotificationSettings();
+    updateAnalytics();
+    updateNotifications();
+    
+    // Check for notifications every 5 minutes
+    setInterval(updateNotifications, 5 * 60 * 1000);
+}
+
+// Update analytics dashboard
+function updateAnalytics() {
+    const period = parseInt(document.getElementById('analytics-period')?.value || 30);
+    analyticsData.period = period;
+    
+    calculateMetrics();
+    renderMetrics();
+    renderProgressCharts();
+    renderPerformanceChart();
+    renderFinancialTable();
+    renderTrendsTable();
+}
+
+// Calculate key metrics
+function calculateMetrics() {
+    const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
+    const totalSpent = projects.reduce((sum, p) => sum + (p.spent || 0), 0);
+    const avgProgress = projects.reduce((sum, p) => sum + (p.progress || 0), 0) / projects.length;
+    
+    // Calculate completion metrics
+    const completedItems = hotTicketItems.filter(item => item.status === 'completed');
+    const avgCompletionTime = calculateAverageCompletionTime(completedItems);
+    
+    // Calculate efficiency score
+    const efficiencyScore = calculateEfficiencyScore();
+    
+    analyticsData.metrics = {
+        totalBudget,
+        totalSpent,
+        avgProgress,
+        avgCompletionTime,
+        efficiencyScore,
+        progressTrend: calculateProgressTrend(),
+        completionTrend: calculateCompletionTrend()
+    };
+}
+
+// Render metrics cards
+function renderMetrics() {
+    const metrics = analyticsData.metrics;
+    
+    document.getElementById('total-budget').textContent = `$${metrics.totalBudget.toLocaleString()}`;
+    document.getElementById('budget-spent').textContent = `$${metrics.totalSpent.toLocaleString()} spent (${Math.round((metrics.totalSpent / metrics.totalBudget) * 100)}%)`;
+    
+    document.getElementById('avg-progress').textContent = `${Math.round(metrics.avgProgress)}%`;
+    document.getElementById('progress-trend').textContent = `${metrics.progressTrend > 0 ? '+' : ''}${metrics.progressTrend}% this month`;
+    
+    document.getElementById('avg-completion').textContent = metrics.avgCompletionTime;
+    document.getElementById('completion-trend').textContent = `${hotTicketItems.filter(i => i.status === 'completed').length} items completed`;
+    
+    document.getElementById('efficiency-score').textContent = `${Math.round(metrics.efficiencyScore)}%`;
+    document.getElementById('efficiency-trend').textContent = metrics.efficiencyScore >= 75 ? 'Above target' : 'Below target';
+}
+
+// Render progress charts
+function renderProgressCharts() {
+    const container = document.getElementById('progress-charts');
+    if (!container) return;
+    
+    container.innerHTML = projects.map(project => {
+        const progressClass = project.progress >= 80 ? 'success' : project.progress >= 50 ? '' : 'warning';
+        return `
+            <div class="project-progress-item">
+                <div class="project-progress-info">
+                    <div class="project-progress-name">${project.name}</div>
+                    <div class="project-progress-details">${project.phase || 'In Progress'} • ${project.pm}</div>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar ${progressClass}" style="width: ${project.progress}%"></div>
+                </div>
+                <div class="progress-percentage">${project.progress}%</div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Render PM performance chart
+function renderPerformanceChart() {
+    const container = document.getElementById('performance-chart');
+    if (!container) return;
+    
+    const pmStats = calculatePMStats();
+    
+    container.innerHTML = Object.entries(pmStats).map(([pm, stats]) => `
+        <div class="pm-performance-item">
+            <div class="pm-info">
+                <div class="pm-avatar ${pm.toLowerCase()}">${pm.charAt(0)}</div>
+                <div>
+                    <div style="font-weight: 600; color: var(--gray-800);">${pm}</div>
+                    <div style="font-size: var(--text-xs); color: var(--gray-600);">${stats.projects} projects</div>
+                </div>
+            </div>
+            <div class="pm-stats">
+                <div class="pm-stat">
+                    <div class="pm-stat-value">${Math.round(stats.avgProgress)}%</div>
+                    <div class="pm-stat-label">Avg Progress</div>
+                </div>
+                <div class="pm-stat">
+                    <div class="pm-stat-value">${stats.activeItems}</div>
+                    <div class="pm-stat-label">Active Items</div>
+                </div>
+                <div class="pm-stat">
+                    <div class="pm-stat-value">${stats.completedThisMonth}</div>
+                    <div class="pm-stat-label">Completed</div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Render financial table
+function renderFinancialTable() {
+    const container = document.getElementById('financial-table');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <table class="analytics-table">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Budget</th>
+                    <th>Spent</th>
+                    <th>Remaining</th>
+                    <th>Progress</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${projects.map(project => {
+                    const remaining = (project.budget || 0) - (project.spent || 0);
+                    const spentPercent = Math.round(((project.spent || 0) / (project.budget || 1)) * 100);
+                    return `
+                        <tr>
+                            <td>${project.name}</td>
+                            <td>$${(project.budget || 0).toLocaleString()}</td>
+                            <td>$${(project.spent || 0).toLocaleString()}</td>
+                            <td style="color: ${remaining < 0 ? 'var(--danger-600)' : 'var(--success-600)'}">
+                                $${remaining.toLocaleString()}
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="flex: 1; height: 4px; background: var(--gray-200); border-radius: 2px;">
+                                        <div style="height: 100%; background: var(--primary-500); border-radius: 2px; width: ${project.progress}%;"></div>
+                                    </div>
+                                    <span style="min-width: 35px; font-size: var(--text-xs);">${project.progress}%</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+// Render trends table
+function renderTrendsTable() {
+    const container = document.getElementById('trends-table');
+    if (!container) return;
+    
+    const trendData = calculateItemTrends();
+    
+    container.innerHTML = `
+        <table class="analytics-table">
+            <thead>
+                <tr>
+                    <th>Item Type</th>
+                    <th>Active</th>
+                    <th>Completed</th>
+                    <th>Avg. Days</th>
+                    <th>Trend</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${Object.entries(trendData).map(([type, data]) => `
+                    <tr>
+                        <td>${getItemTypeDisplay(type)}</td>
+                        <td>${data.active}</td>
+                        <td>${data.completed}</td>
+                        <td>${data.avgDays}</td>
+                        <td style="color: ${data.trend > 0 ? 'var(--success-600)' : 'var(--danger-600)'}">
+                            ${data.trend > 0 ? '↗' : '↘'} ${Math.abs(data.trend)}%
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+// Smart Notifications System
+function updateNotifications() {
+    const urgentItems = hotTicketItems.filter(item => getItemStatus(item) === 'urgent');
+    const overdueItems = hotTicketItems.filter(item => getItemStatus(item) === 'overdue');
+    const milestones = checkProjectMilestones();
+    
+    // Update notification counts
+    document.getElementById('urgent-notification-count').textContent = urgentItems.length;
+    document.getElementById('overdue-notification-count').textContent = overdueItems.length;
+    document.getElementById('milestone-notification-count').textContent = milestones.length;
+    
+    // Render notification lists
+    renderNotificationList('urgent-notifications-list', urgentItems.map(item => ({
+        id: item.id,
+        title: `${getItemTypeDisplay(item.type)} - ${getItemTitle(item)}`,
+        content: `Due ${formatRelativeTime(item.dueDate)} - Project: ${getProjectName(item.project)}`,
+        time: formatRelativeTime(item.dueDate),
+        type: 'urgent'
+    })));
+    
+    renderNotificationList('overdue-notifications-list', overdueItems.map(item => ({
+        id: item.id,
+        title: `${getItemTypeDisplay(item.type)} - ${getItemTitle(item)}`,
+        content: `${Math.abs(getDaysUntilDue(item.dueDate))} days overdue - Project: ${getProjectName(item.project)}`,
+        time: formatRelativeTime(item.dueDate),
+        type: 'overdue'
+    })));
+    
+    renderNotificationList('milestone-notifications-list', milestones);
+    
+    // Browser notifications for urgent items (if enabled)
+    if (urgentItems.length > 0 && Notification.permission === 'granted') {
+        const notificationSettings = getNotificationSettings();
+        if (notificationSettings.browserNotifications) {
+            showBrowserNotification(urgentItems[0]);
+        }
+    }
+}
+
+// Render notification list
+function renderNotificationList(containerId, notifications) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    if (notifications.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--gray-500); padding: 1rem;">No notifications</div>';
+        return;
+    }
+    
+    container.innerHTML = notifications.map(notification => `
+        <div class="notification-item" onclick="focusOnItem('${notification.id}')">
+            <div class="notification-item-header">
+                <div class="notification-item-title">${notification.title}</div>
+                <div class="notification-item-time">${notification.time}</div>
+            </div>
+            <div class="notification-item-content">${notification.content}</div>
+        </div>
+    `).join('');
+}
+
+// Configure notifications modal
+function configureNotifications() {
+    if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                showNotification('Browser notifications enabled!', 'success');
+            }
+        });
+    }
+    
+    showNotificationSettingsModal();
+}
+
+// Helper functions for analytics
+function calculateAverageCompletionTime(completedItems) {
+    if (completedItems.length === 0) return 0;
+    
+    const totalDays = completedItems.reduce((sum, item) => {
+        const created = new Date(item.createdDate);
+        const completed = new Date(item.completedDate || Date.now());
+        const days = Math.ceil((completed - created) / (1000 * 60 * 60 * 24));
+        return sum + days;
+    }, 0);
+    
+    return Math.round(totalDays / completedItems.length);
+}
+
+function calculateEfficiencyScore() {
+    const totalItems = hotTicketItems.length;
+    const completedItems = hotTicketItems.filter(item => item.status === 'completed').length;
+    const overdueItems = hotTicketItems.filter(item => getItemStatus(item) === 'overdue').length;
+    
+    if (totalItems === 0) return 100;
+    
+    const completionRate = (completedItems / totalItems) * 100;
+    const overdueRate = (overdueItems / totalItems) * 100;
+    
+    return Math.max(0, completionRate - (overdueRate * 2));
+}
+
+function calculateProgressTrend() {
+    // Simulate progress trend calculation
+    return Math.floor(Math.random() * 20) - 10; // -10 to +10
+}
+
+function calculateCompletionTrend() {
+    // Simulate completion trend calculation
+    return Math.floor(Math.random() * 10) + 5; // 5 to 15
+}
+
+function calculatePMStats() {
+    const stats = {};
+    
+    ['Makayla', 'Ben', 'Jeremy'].forEach(pm => {
+        const pmProjects = projects.filter(p => p.pm === pm);
+        const pmItems = hotTicketItems.filter(item => {
+            const project = projects.find(p => p.id === item.project);
+            return project && project.pm === pm;
+        });
+        
+        stats[pm] = {
+            projects: pmProjects.length,
+            avgProgress: pmProjects.reduce((sum, p) => sum + (p.progress || 0), 0) / pmProjects.length || 0,
+            activeItems: pmItems.filter(item => item.status !== 'completed').length,
+            completedThisMonth: pmItems.filter(item => {
+                if (item.status !== 'completed') return false;
+                const completedDate = new Date(item.completedDate || Date.now());
+                const thisMonth = new Date();
+                return completedDate.getMonth() === thisMonth.getMonth() && 
+                       completedDate.getFullYear() === thisMonth.getFullYear();
+            }).length
+        };
+    });
+    
+    return stats;
+}
+
+function calculateItemTrends() {
+    const trends = {};
+    
+    ['tm', 'lien', 'payapp', 'rfi', 'submittal', 'commitment'].forEach(type => {
+        const typeItems = hotTicketItems.filter(item => item.type === type);
+        const completed = typeItems.filter(item => item.status === 'completed');
+        
+        trends[type] = {
+            active: typeItems.filter(item => item.status !== 'completed').length,
+            completed: completed.length,
+            avgDays: calculateAverageCompletionTime(completed),
+            trend: Math.floor(Math.random() * 40) - 20 // -20 to +20
+        };
+    });
+    
+    return trends;
+}
+
+function checkProjectMilestones() {
+    const milestones = [];
+    
+    projects.forEach(project => {
+        if (project.progress >= 25 && project.progress < 30) {
+            milestones.push({
+                id: project.id,
+                title: '25% Milestone Reached',
+                content: `${project.name} has reached 25% completion`,
+                time: 'Today',
+                type: 'milestone'
+            });
+        }
+        if (project.progress >= 50 && project.progress < 55) {
+            milestones.push({
+                id: project.id,
+                title: '50% Milestone Reached',
+                content: `${project.name} is halfway complete`,
+                time: 'Today',
+                type: 'milestone'
+            });
+        }
+        if (project.progress >= 75 && project.progress < 80) {
+            milestones.push({
+                id: project.id,
+                title: '75% Milestone Reached',
+                content: `${project.name} is nearing completion`,
+                time: 'Today',
+                type: 'milestone'
+            });
+        }
+    });
+    
+    return milestones;
+}
+
+function getItemTitle(item) {
+    switch (item.type) {
+        case 'tm': return item.employee || 'T&M Item';
+        case 'lien': return item.vendor || 'Lien Release';
+        case 'payapp': return `Pay App #${item.payAppNumber || 'N/A'}`;
+        case 'rfi': return `RFI #${item.rfiNumber || 'N/A'}`;
+        case 'submittal': return item.submittalType || 'Submittal';
+        case 'commitment': return item.subcontractor || 'Commitment';
+        default: return 'Item';
+    }
+}
+
+function getProjectName(projectId) {
+    const project = projects.find(p => p.id === projectId);
+    return project ? project.name : 'Unknown Project';
+}
+
+function formatRelativeTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = date - now;
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return 'tomorrow';
+    if (diffDays === -1) return 'yesterday';
+    if (diffDays > 1) return `in ${diffDays} days`;
+    if (diffDays < -1) return `${Math.abs(diffDays)} days ago`;
+    
+    return dateString;
+}
+
+function focusOnItem(itemId) {
+    // Scroll to the item in the list
+    const itemElements = document.querySelectorAll('.item-card');
+    itemElements.forEach(element => {
+        const buttons = element.querySelectorAll('button[onclick*="' + itemId + '"]');
+        if (buttons.length > 0) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.style.boxShadow = 'var(--shadow-2xl)';
+            setTimeout(() => {
+                element.style.boxShadow = '';
+            }, 3000);
+        }
+    });
+}
+
+function showBrowserNotification(item) {
+    if (Notification.permission === 'granted') {
+        const notification = new Notification(`MHC Tracker: ${getItemTypeDisplay(item.type)} Due Soon`, {
+            body: `${getItemTitle(item)} is due ${formatRelativeTime(item.dueDate)}`,
+            icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiMxZTNhOGEiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9IiNmYmJmMjQiPgo8cGF0aCBkPSJNMjU2IDMySDIzMkg5NmMtMTcuNjcgMC0zMiAxNC4zMy0zMiAzMnY5NmMwIDE3LjY3IDE0LjMzIDMyIDMyIDMyaDEzNmMxNy42NyAwIDMyLTE0LjMzIDMyLTMyVjY0YzAtMTcuNjctMTQuMzMtMzItMzItMzJ6Ii8+CjxwYXRoIGQ9Ik00NDggMzI4SDMxMmMtMTcuNjcgMC0zMiAxNC4zMy0zMiAzMnY5NmMwIDE3LjY3IDE0LjMzIDMyIDMyIDMyaDEzNmMxNy42NyAwIDMyLTE0LjMzIDMyLTMydi05NmMwLTE3LjY3LTE0LjMzLTMyLTMyLTMyeiIvPgo8cGF0aCBkPSJNNDQ4IDEyOEgzMTJjLTE3LjY3IDAtMzIgMTQuMzMtMzIgMzJ2OTZjMCAxNy42NyAxNC4zMyAzMiAzMiAzMmgxMzZjMTcuNjcgMCAzMi0xNC4zMyAzMi0zMnYtOTZjMC0xNy42Ny0xNC4zMy0zMi0zMi0zMnoiLz4KPHN2Zz4KPC9zdmc+',
+            tag: 'mhc-urgent-' + item.id
+        });
+        
+        notification.onclick = () => {
+            window.focus();
+            focusOnItem(item.id);
+            notification.close();
+        };
+        
+        setTimeout(() => notification.close(), 8000);
+    }
+}
+
+// Notification settings
+function getNotificationSettings() {
+    const settings = localStorage.getItem('mhc_notification_settings');
+    return settings ? JSON.parse(settings) : {
+        browserNotifications: false,
+        dailyDigest: false,
+        weeklyDigest: false,
+        email: ''
+    };
+}
+
+function updateEmailSettings() {
+    const settings = {
+        browserNotifications: Notification.permission === 'granted',
+        dailyDigest: document.getElementById('daily-digest')?.checked || false,
+        weeklyDigest: document.getElementById('weekly-digest')?.checked || false,
+        email: document.getElementById('digest-email')?.value || ''
+    };
+    
+    localStorage.setItem('mhc_notification_settings', JSON.stringify(settings));
+    showNotification('Notification settings updated!', 'success');
+}
+
+function loadNotificationSettings() {
+    const settings = getNotificationSettings();
+    
+    if (document.getElementById('daily-digest')) {
+        document.getElementById('daily-digest').checked = settings.dailyDigest;
+    }
+    if (document.getElementById('weekly-digest')) {
+        document.getElementById('weekly-digest').checked = settings.weeklyDigest;
+    }
+    if (document.getElementById('digest-email')) {
+        document.getElementById('digest-email').value = settings.email;
+    }
+}
+
+function markAllNotificationsRead() {
+    // Mark all notifications as read (visual feedback)
+    document.querySelectorAll('.notification-item').forEach(item => {
+        item.style.opacity = '0.6';
+    });
+    
+    showNotification('All notifications marked as read', 'success');
+}
+
+function exportAnalytics() {
+    const analyticsReport = {
+        generatedDate: new Date().toISOString(),
+        period: analyticsData.period,
+        metrics: analyticsData.metrics,
+        projects: projects.map(p => ({
+            name: p.name,
+            pm: p.pm,
+            progress: p.progress,
+            budget: p.budget,
+            spent: p.spent,
+            phase: p.phase
+        })),
+        items: hotTicketItems.map(item => ({
+            type: item.type,
+            status: getItemStatus(item),
+            dueDate: item.dueDate,
+            project: getProjectName(item.project)
+        }))
+    };
+    
+    const blob = new Blob([JSON.stringify(analyticsReport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `MHC-Analytics-Report-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showNotification('Analytics report exported successfully!', 'success');
+}
+
+// Initialize analytics when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('MHC Project Tracker initialized');
+    
+    // Load data and render
+    loadData();
+    renderItems();
+    renderProjects();
+    
+    // Initialize enhanced features
+    setTimeout(() => {
+        initializeAnalytics();
+        loadSavedFilterSets();
+        
+        // Check for first-time user
+        if (!localStorage.getItem('mhc_first_visit_done')) {
+            showWelcomeMessage();
+            localStorage.setItem('mhc_first_visit_done', 'true');
+        }
+    }, 1000);
+});
+
+// Enhanced keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + N: Create new item
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        showModal('modal');
+    }
+    
+    // Ctrl/Cmd + F: Focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+        }
+    }
+    
+    // Ctrl/Cmd + 1-6: Switch item types
+    if ((e.ctrlKey || e.metaKey) && e.key >= '1' && e.key <= '6') {
+        e.preventDefault();
+        const types = ['all', 'tm', 'lien', 'payapp', 'rfi', 'submittal'];
+        if (types[parseInt(e.key) - 1]) {
+            filterItems(types[parseInt(e.key) - 1]);
+        }
+    }
+    
+    // Ctrl/Cmd + A: Show analytics (when not in input)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !e.target.matches('input, textarea')) {
+        e.preventDefault();
+        const analyticsSection = document.getElementById('analytics-section');
+        if (analyticsSection) {
+            analyticsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+    
+    // Escape: Close modals and clear filters
+    if (e.key === 'Escape') {
+        const modals = document.querySelectorAll('.modal[style*="display: block"]');
+        if (modals.length > 0) {
+            modals.forEach(modal => modal.style.display = 'none');
+        } else {
+            clearSearch();
+        }
+    }
+    
+    // Ctrl/Cmd + S: Save data
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveData();
+        showNotification('Data saved successfully!', 'success');
+    }
+    
+    // Ctrl/Cmd + E: Export data
+    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        exportData();
+    }
+    
+    // Ctrl/Cmd + B: Show notifications bell
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        const notificationsSection = document.getElementById('notifications');
+        if (notificationsSection) {
+            notificationsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+    
+    // Alt + N: Configure notifications
+    if (e.altKey && e.key === 'n') {
+        e.preventDefault();
+        configureNotifications();
+    }
+});
+
+// Show notification settings modal
+function showNotificationSettingsModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 style="margin: 0; color: var(--primary-700);">
+                    <i class="fas fa-bell"></i> Notification Settings
+                </h2>
+                <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; margin: 1rem 0;">
+                    <input type="checkbox" id="browser-notifications-setting" onchange="toggleBrowserNotifications()">
+                    <strong>Browser Notifications</strong>
+                </label>
+                <small style="color: var(--gray-600); margin-left: 1.5rem;">
+                    Show desktop notifications for urgent items
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; margin: 1rem 0;">
+                    <input type="checkbox" id="daily-digest-setting">
+                    <strong>Daily Email Digest</strong>
+                </label>
+                <small style="color: var(--gray-600); margin-left: 1.5rem;">
+                    Daily summary of overdue and upcoming items
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; margin: 1rem 0;">
+                    <input type="checkbox" id="weekly-digest-setting">
+                    <strong>Weekly Progress Report</strong>
+                </label>
+                <small style="color: var(--gray-600); margin-left: 1.5rem;">
+                    Weekly project progress and analytics summary
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="digest-email-setting" style="display: block; margin: 1rem 0 0.5rem 0; font-weight: 600;">
+                    Email Address for Digests:
+                </label>
+                <input type="email" id="digest-email-setting" 
+                       placeholder="your.email@company.com" 
+                       style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md);">
+            </div>
+            
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" 
+                        onclick="this.closest('.modal').remove()"
+                        style="padding: 0.75rem 1.5rem; background: var(--gray-100); color: var(--gray-700); border: none; border-radius: var(--radius-md); cursor: pointer;">
+                    Cancel
+                </button>
+                <button type="button" 
+                        onclick="saveNotificationSettings(); this.closest('.modal').remove()"
+                        style="padding: 0.75rem 1.5rem; background: var(--primary-600); color: white; border: none; border-radius: var(--radius-md); cursor: pointer;">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Load current settings
+    const settings = getNotificationSettings();
+    document.getElementById('browser-notifications-setting').checked = settings.browserNotifications;
+    document.getElementById('daily-digest-setting').checked = settings.dailyDigest;
+    document.getElementById('weekly-digest-setting').checked = settings.weeklyDigest;
+    document.getElementById('digest-email-setting').value = settings.email;
+}
+
+function toggleBrowserNotifications() {
+    if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                document.getElementById('browser-notifications-setting').checked = true;
+                showNotification('Browser notifications enabled!', 'success');
+            } else {
+                document.getElementById('browser-notifications-setting').checked = false;
+                showNotification('Browser notifications permission denied', 'error');
+            }
+        });
+    } else if (Notification.permission === 'denied') {
+        document.getElementById('browser-notifications-setting').checked = false;
+        showNotification('Browser notifications are blocked. Please enable them in your browser settings.', 'error');
+    }
+}
+
+function saveNotificationSettings() {
+    const settings = {
+        browserNotifications: document.getElementById('browser-notifications-setting').checked && Notification.permission === 'granted',
+        dailyDigest: document.getElementById('daily-digest-setting').checked,
+        weeklyDigest: document.getElementById('weekly-digest-setting').checked,
+        email: document.getElementById('digest-email-setting').value
+    };
+    
+    localStorage.setItem('mhc_notification_settings', JSON.stringify(settings));
+    showNotification('Notification settings saved successfully!', 'success');
+}
+
+// Utility functions for better UX
+function getItemTypeDisplay(type) {
+    const typeMap = {
+        'tm': 'T&M',
+        'lien': 'Lien Release',
+        'payapp': 'Pay Application',
+        'rfi': 'RFI',
+        'submittal': 'Submittal',
+        'commitment': 'Commitment'
+    };
+    return typeMap[type] || type;
+}
+
+function getDaysUntilDue(dueDateString) {
+    const dueDate = new Date(dueDateString);
+    const today = new Date();
+    const timeDiff = dueDate.getTime() - today.getTime();
+    return Math.ceil(timeDiff / (1000 * 3600 * 24));
+}
+
+function getItemStatus(item) {
+    if (item.status === 'completed') return 'completed';
+    
+    const daysUntilDue = getDaysUntilDue(item.dueDate);
+    
+    if (daysUntilDue < 0) return 'overdue';
+    if (daysUntilDue <= 3) return 'urgent';
+    if (daysUntilDue <= 7) return 'warning';
+    return 'normal';
+}
+
+// Enhanced search with highlighting
+function highlightSearchTerms(text, searchTerm) {
+    if (!searchTerm) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    return text.replace(regex, '<mark style="background: var(--warning-100); color: var(--warning-800);">$1</mark>');
+}
+
+function showWelcomeMessage() {
+    showNotification('Welcome to MHC Project Tracker! Use Ctrl+F to search, Ctrl+N for new items, and Ctrl+A for analytics.', 'info', 8000);
 }
 
 // Notification system
