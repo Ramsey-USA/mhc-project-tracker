@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     initializeData();
     loadData();
+    loadSavedFilters();
     renderDashboard();
     updateStats();
     initializeCarousel();
@@ -18,7 +19,114 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('input[name="date"], input[name="initiatedDate"]').forEach(input => {
         if (!input.value) input.value = today;
     });
+    
+    // Initialize keyboard shortcuts
+    initializeKeyboardShortcuts();
 });
+
+// Keyboard Shortcuts
+function initializeKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+        // Only handle shortcuts when not in input fields
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+            return;
+        }
+        
+        // Handle shortcut combinations
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key) {
+                case 'k': // Ctrl+K - Focus search
+                    e.preventDefault();
+                    document.getElementById('search-input').focus();
+                    break;
+                case 'n': // Ctrl+N - New item (show quick actions)
+                    e.preventDefault();
+                    document.querySelector('.quick-add-section').scrollIntoView({ behavior: 'smooth' });
+                    break;
+                case 'f': // Ctrl+F - Toggle advanced filters
+                    e.preventDefault();
+                    toggleAdvancedFilters();
+                    break;
+                case 's': // Ctrl+S - Save current filters
+                    e.preventDefault();
+                    saveCurrentFilters();
+                    break;
+            }
+        } else {
+            switch (e.key) {
+                case 'Escape':
+                    // Close any open modals
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        if (modal.style.display === 'block') {
+                            modal.style.display = 'none';
+                        }
+                    });
+                    break;
+                case '/': // Focus search with /
+                    e.preventDefault();
+                    document.getElementById('search-input').focus();
+                    break;
+            }
+        }
+    });
+    
+    // Show keyboard shortcuts help
+    const helpButton = document.createElement('button');
+    helpButton.className = 'btn btn-sm btn-secondary';
+    helpButton.innerHTML = '<i class="fas fa-keyboard"></i> Shortcuts';
+    helpButton.onclick = showKeyboardShortcuts;
+    
+    const filterActions = document.querySelector('.filter-actions');
+    if (filterActions) {
+        filterActions.appendChild(helpButton);
+    }
+}
+
+function showKeyboardShortcuts() {
+    const shortcuts = `
+    <div style="text-align: left; line-height: 1.6;">
+        <h4 style="margin-bottom: 1rem; color: var(--primary-600);">Keyboard Shortcuts</h4>
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 0.5rem; margin-bottom: 1rem;">
+            <strong>Ctrl + K</strong><span>Focus search box</span>
+            <strong>Ctrl + N</strong><span>Scroll to quick actions</span>
+            <strong>Ctrl + F</strong><span>Toggle advanced filters</span>
+            <strong>Ctrl + S</strong><span>Save current filters</span>
+            <strong>/</strong><span>Focus search box</span>
+            <strong>Escape</strong><span>Close modals</span>
+            <strong>←/→</strong><span>Navigate carousel (when focused)</span>
+        </div>
+        <p style="color: var(--gray-600); font-size: 0.9rem;">
+            <i class="fas fa-lightbulb"></i> Tip: Use Tab to navigate through controls efficiently!
+        </p>
+    </div>
+    `;
+    
+    const existingModal = document.getElementById('shortcuts-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = 'shortcuts-modal';
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+                <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+            </div>
+            <div style="padding: 2rem;">
+                ${shortcuts}
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">Got it!</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
 
 // Carousel Functionality
 let currentCarouselIndex = 0;
@@ -452,112 +560,79 @@ function renderProjects() {
 
 // Render items list
 function renderItems() {
-    const itemsContainer = document.getElementById('items-container');
-    if (!itemsContainer) return;
-    
     const filteredItems = filterItems();
-    itemsContainer.innerHTML = '';
+    // The filtering and rendering is now handled by filterItems() and renderFilteredItems()
+}
+
+// Get item type display name
+function getItemTypeDisplay(type) {
+    const typeMap = {
+        'tm': 'T&M Ticket',
+        'lien': 'Lien Release',
+        'payapp': 'Pay App',
+        'rfi': 'RFI',
+        'submittal': 'Submittal',
+        'commitment': 'Commitment'
+    };
+    return typeMap[type] || type;
+}
+
+// Get item display content based on type
+function getItemDisplayContent(item) {
+    let content = '';
     
-    if (filteredItems.length === 0) {
-        itemsContainer.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: #6b7280;">
-                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                <p>No items found matching current filters.</p>
-            </div>
-        `;
-        return;
+    switch (item.type) {
+        case 'tm':
+            content = `
+                <p><strong>Employee:</strong> ${highlightSearchTerm(item.employee || 'N/A')}</p>
+                <p><strong>Hours:</strong> ${item.hours || 'N/A'}</p>
+                <p><strong>Description:</strong> ${highlightSearchTerm(item.description || 'N/A')}</p>
+                ${item.materials ? `<p><strong>Materials:</strong> ${highlightSearchTerm(item.materials)}</p>` : ''}
+            `;
+            break;
+        case 'lien':
+            content = `
+                <p><strong>Vendor:</strong> ${highlightSearchTerm(item.vendor || 'N/A')}</p>
+                <p><strong>Amount:</strong> $${item.amount?.toLocaleString() || 'N/A'}</p>
+                <p><strong>Release Type:</strong> ${item.releaseType || 'N/A'}</p>
+            `;
+            break;
+        case 'payapp':
+            content = `
+                <p><strong>Pay App #:</strong> ${highlightSearchTerm(item.payAppNumber || 'N/A')}</p>
+                <p><strong>Amount:</strong> $${item.amount?.toLocaleString() || 'N/A'}</p>
+                <p><strong>Period Ending:</strong> ${item.periodEnding || 'N/A'}</p>
+            `;
+            break;
+        case 'rfi':
+            content = `
+                <p><strong>RFI #:</strong> ${highlightSearchTerm(item.rfiNumber || 'N/A')}</p>
+                <p><strong>Subject:</strong> ${highlightSearchTerm(item.subject || 'N/A')}</p>
+                <p><strong>Priority:</strong> ${item.priority || 'N/A'}</p>
+            `;
+            break;
+        case 'submittal':
+            content = `
+                <p><strong>Type:</strong> ${item.submittalType || 'N/A'}</p>
+                <p><strong>Submittal #:</strong> ${highlightSearchTerm(item.submittalNumber || 'N/A')}</p>
+                <p><strong>Description:</strong> ${highlightSearchTerm(item.description || 'N/A')}</p>
+            `;
+            break;
+        case 'commitment':
+            content = `
+                <p><strong>Subcontractor:</strong> ${highlightSearchTerm(item.subcontractor || 'N/A')}</p>
+                <p><strong>Trade:</strong> ${item.trade || 'N/A'}</p>
+                <p><strong>Amount:</strong> $${item.contractAmount?.toLocaleString() || 'N/A'}</p>
+                <p><strong>Status:</strong> ${item.agreementStatus || 'pending'}</p>
+            `;
+            break;
     }
     
-    filteredItems.forEach(item => {
-        const project = projects.find(p => p.id === item.project);
-        const status = getItemStatus(item);
-        const daysUntil = getDaysUntilDue(item.dueDate);
-        
-        let daysText = '';
-        if (daysUntil < 0) {
-            daysText = `${Math.abs(daysUntil)} days overdue`;
-        } else if (daysUntil === 0) {
-            daysText = 'Due today';
-        } else if (daysUntil === 1) {
-            daysText = 'Due tomorrow';
-        } else {
-            daysText = `Due in ${daysUntil} days`;
-        }
-        
-        let primaryText = '';
-        let secondaryText = '';
-        
-        switch (item.type) {
-            case 'tm':
-                primaryText = `${item.employee} - ${item.hours} hours`;
-                secondaryText = item.description;
-                break;
-            case 'lien':
-                primaryText = item.vendor;
-                secondaryText = `${item.releaseType} release - $${item.amount?.toLocaleString() || 'N/A'}`;
-                break;
-            case 'payapp':
-                primaryText = `Pay App #${item.payAppNumber}`;
-                secondaryText = `$${item.amount?.toLocaleString() || 'N/A'}`;
-                break;
-            case 'rfi':
-                primaryText = `RFI #${item.rfiNumber || 'N/A'}`;
-                secondaryText = item.subject;
-                break;
-            case 'submittal':
-                primaryText = `Submittal: ${item.submittalType}`;
-                secondaryText = item.description;
-                break;
-            case 'commitment':
-                primaryText = `${item.subcontractor} - ${item.trade}`;
-                secondaryText = `$${item.contractAmount?.toLocaleString() || 'N/A'} - ${item.agreementStatus || 'pending'}`;
-                break;
-        }
-        
-        const itemCard = document.createElement('div');
-        itemCard.className = `item-card ${item.type} ${status}`;
-        itemCard.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                <div>
-                    <div style="font-weight: 700; color: #1f2937; margin-bottom: 0.25rem;">
-                        ${primaryText}
-                    </div>
-                    <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0.5rem;">
-                        ${secondaryText || ''}
-                    </div>
-                    <div style="color: #374151; font-size: 0.85rem;">
-                        <i class="fas fa-building"></i> ${project?.name || 'Unknown Project'}
-                    </div>
-                </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem; 
-                        color: ${status === 'overdue' ? '#dc2626' : status === 'urgent' ? '#f59e0b' : '#6b7280'};">
-                        ${daysText}
-                    </div>
-                    <div style="font-size: 0.75rem; color: #6b7280;">
-                        Priority: ${item.priority || 'normal'}
-                    </div>
-                </div>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; 
-                        padding-top: 1rem; border-top: 1px solid #e5e7eb;">
-                <div style="font-size: 0.8rem; color: #6b7280;">
-                    <i class="fas fa-user"></i> Ball in court: ${item.ballInCourt || 'N/A'}
-                </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button onclick="editItem('${item.id}')" class="btn" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button onclick="markComplete('${item.id}')" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
-                        <i class="fas fa-check"></i> Complete
-                    </button>
-                </div>
-            </div>
-            ${item.notes ? `<div style="margin-top: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 6px; font-size: 0.85rem; color: #374151;"><strong>Notes:</strong> ${item.notes}</div>` : ''}
-        `;
-        
-        itemsContainer.appendChild(itemCard);
-    });
+    if (item.notes) {
+        content += `<div class="item-notes"><strong>Notes:</strong> ${highlightSearchTerm(item.notes)}</div>`;
+    }
+    
+    return content;
 }
 
 // Modal and Form Functions
@@ -730,27 +805,370 @@ function showContactModal(itemId) {
     document.querySelector('#contact-modal input[name="date"]').value = today;
 }
 
-// Filter items
+// Enhanced Filter and Search System
+let savedFilters = [];
+let currentSearchTerm = '';
+
+// Load saved filters from localStorage
+function loadSavedFilters() {
+    const saved = localStorage.getItem('mhc_saved_filters');
+    if (saved) {
+        savedFilters = JSON.parse(saved);
+        updateSavedFiltersDisplay();
+    }
+}
+
+// Save current filters
+function saveCurrentFilters() {
+    const filterName = prompt('Enter a name for this filter set:');
+    if (!filterName) return;
+    
+    const currentFilters = {
+        name: filterName,
+        search: document.getElementById('search-input').value,
+        pm: document.getElementById('pm-filter').value,
+        type: document.getElementById('type-filter').value,
+        status: document.getElementById('status-filter').value,
+        dateFrom: document.getElementById('date-from')?.value || '',
+        dateTo: document.getElementById('date-to')?.value || '',
+        dueDateFrom: document.getElementById('due-date-from')?.value || '',
+        dueDateTo: document.getElementById('due-date-to')?.value || '',
+        ballInCourt: document.getElementById('ball-in-court-filter')?.value || '',
+        priority: document.getElementById('priority-filter')?.value || '',
+        timestamp: new Date().toISOString()
+    };
+    
+    savedFilters.push(currentFilters);
+    localStorage.setItem('mhc_saved_filters', JSON.stringify(savedFilters));
+    updateSavedFiltersDisplay();
+    showNotification(`Filter "${filterName}" saved successfully!`, 'success');
+}
+
+// Apply saved filter
+function applySavedFilter(filterIndex) {
+    const filter = savedFilters[filterIndex];
+    if (!filter) return;
+    
+    document.getElementById('search-input').value = filter.search;
+    document.getElementById('pm-filter').value = filter.pm;
+    document.getElementById('type-filter').value = filter.type;
+    document.getElementById('status-filter').value = filter.status;
+    
+    if (document.getElementById('date-from')) {
+        document.getElementById('date-from').value = filter.dateFrom;
+        document.getElementById('date-to').value = filter.dateTo;
+        document.getElementById('due-date-from').value = filter.dueDateFrom;
+        document.getElementById('due-date-to').value = filter.dueDateTo;
+        document.getElementById('ball-in-court-filter').value = filter.ballInCourt;
+        document.getElementById('priority-filter').value = filter.priority;
+    }
+    
+    performSearch();
+    updateActiveFiltersDisplay();
+    showNotification(`Applied filter "${filter.name}"`, 'success');
+}
+
+// Delete saved filter
+function deleteSavedFilter(filterIndex) {
+    if (confirm('Are you sure you want to delete this saved filter?')) {
+        savedFilters.splice(filterIndex, 1);
+        localStorage.setItem('mhc_saved_filters', JSON.stringify(savedFilters));
+        updateSavedFiltersDisplay();
+        showNotification('Filter deleted', 'success');
+    }
+}
+
+// Update saved filters display
+function updateSavedFiltersDisplay() {
+    const savedFiltersSection = document.getElementById('saved-filters');
+    const savedFiltersList = document.getElementById('saved-filters-list');
+    
+    if (savedFilters.length === 0) {
+        savedFiltersSection.style.display = 'none';
+        return;
+    }
+    
+    savedFiltersSection.style.display = 'block';
+    savedFiltersList.innerHTML = savedFilters.map((filter, index) => `
+        <div class="saved-filter-item" onclick="applySavedFilter(${index})">
+            <span>${filter.name}</span>
+            <span class="delete-filter" onclick="event.stopPropagation(); deleteSavedFilter(${index});">
+                <i class="fas fa-times"></i>
+            </span>
+        </div>
+    `).join('');
+}
+
+// Toggle advanced filters
+function toggleAdvancedFilters() {
+    const advancedFilters = document.getElementById('advanced-filters');
+    const isVisible = advancedFilters.style.display !== 'none';
+    advancedFilters.style.display = isVisible ? 'none' : 'block';
+    
+    const button = event.target.closest('button');
+    const icon = button.querySelector('i');
+    icon.className = isVisible ? 'fas fa-sliders-h' : 'fas fa-times';
+    button.querySelector('span') ? button.querySelector('span').textContent = isVisible ? ' Advanced' : ' Close' : null;
+}
+
+// Clear search
+function clearSearch() {
+    document.getElementById('search-input').value = '';
+    currentSearchTerm = '';
+    document.querySelector('.clear-search').style.display = 'none';
+    performSearch();
+}
+
+// Clear all filters
+function clearAllFilters() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('pm-filter').value = '';
+    document.getElementById('type-filter').value = '';
+    document.getElementById('status-filter').value = '';
+    
+    // Clear advanced filters if they exist
+    const advancedInputs = ['date-from', 'date-to', 'due-date-from', 'due-date-to', 'ball-in-court-filter', 'priority-filter'];
+    advancedInputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = '';
+    });
+    
+    currentSearchTerm = '';
+    document.querySelector('.clear-search').style.display = 'none';
+    performSearch();
+    updateActiveFiltersDisplay();
+    showNotification('All filters cleared', 'success');
+}
+
+// Enhanced search with highlighting
+function performSearch() {
+    currentSearchTerm = document.getElementById('search-input').value.toLowerCase();
+    const clearBtn = document.querySelector('.clear-search');
+    clearBtn.style.display = currentSearchTerm ? 'block' : 'none';
+    
+    filterItems();
+    updateActiveFiltersDisplay();
+}
+
+// Check if date is in range
+function isDateInRange(dateStr, fromStr, toStr) {
+    if (!fromStr && !toStr) return true;
+    
+    const date = new Date(dateStr);
+    const from = fromStr ? new Date(fromStr) : null;
+    const to = toStr ? new Date(toStr) : null;
+    
+    if (from && date < from) return false;
+    if (to && date > to) return false;
+    return true;
+}
+
+// Enhanced filter function
 function filterItems() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();
     const pmFilter = document.getElementById('pm-filter').value;
     const typeFilter = document.getElementById('type-filter').value;
     const statusFilter = document.getElementById('status-filter').value;
     
-    return hotTicketItems.filter(item => {
+    // Advanced filters
+    const dateFrom = document.getElementById('date-from')?.value || '';
+    const dateTo = document.getElementById('date-to')?.value || '';
+    const dueDateFrom = document.getElementById('due-date-from')?.value || '';
+    const dueDateTo = document.getElementById('due-date-to')?.value || '';
+    const ballInCourtFilter = document.getElementById('ball-in-court-filter')?.value || '';
+    const priorityFilter = document.getElementById('priority-filter')?.value || '';
+    
+    const filteredItems = hotTicketItems.filter(item => {
         const project = projects.find(p => p.id === item.project);
+        
+        // Enhanced search across all fields
         const matchesSearch = !searchTerm || 
             item.description?.toLowerCase().includes(searchTerm) ||
             item.employee?.toLowerCase().includes(searchTerm) ||
             item.vendor?.toLowerCase().includes(searchTerm) ||
-            project?.name.toLowerCase().includes(searchTerm);
+            item.notes?.toLowerCase().includes(searchTerm) ||
+            item.materials?.toLowerCase().includes(searchTerm) ||
+            item.tools?.toLowerCase().includes(searchTerm) ||
+            item.payAppNumber?.toLowerCase().includes(searchTerm) ||
+            item.releaseType?.toLowerCase().includes(searchTerm) ||
+            item.rfiNumber?.toLowerCase().includes(searchTerm) ||
+            item.submittalNumber?.toLowerCase().includes(searchTerm) ||
+            item.subcontractor?.toLowerCase().includes(searchTerm) ||
+            project?.name?.toLowerCase().includes(searchTerm) ||
+            project?.pm?.toLowerCase().includes(searchTerm);
         
         const matchesPM = !pmFilter || project?.pm === pmFilter;
         const matchesType = !typeFilter || item.type === typeFilter;
         const matchesStatus = !statusFilter || getItemStatus(item) === statusFilter;
         
-        return matchesSearch && matchesPM && matchesType && matchesStatus;
+        // Advanced filter matches
+        const matchesDateRange = isDateInRange(item.date || item.initiatedDate, dateFrom, dateTo);
+        const matchesDueDateRange = isDateInRange(item.dueDate, dueDateFrom, dueDateTo);
+        const matchesBallInCourt = !ballInCourtFilter || item.ballInCourt === ballInCourtFilter;
+        const matchesPriority = !priorityFilter || item.priority === priorityFilter;
+        
+        return matchesSearch && matchesPM && matchesType && matchesStatus && 
+               matchesDateRange && matchesDueDateRange && matchesBallInCourt && matchesPriority;
     });
+    
+    renderFilteredItems(filteredItems);
+    return filteredItems;
+}
+
+// Render filtered items with search highlighting
+function renderFilteredItems(filteredItems) {
+    const itemsContainer = document.getElementById('items-container');
+    if (!itemsContainer) return;
+
+    itemsContainer.innerHTML = '';
+    
+    if (filteredItems.length === 0) {
+        itemsContainer.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No items found matching current filters.</p>
+                <button class="btn btn-secondary btn-sm" onclick="clearAllFilters()">Clear All Filters</button>
+            </div>
+        `;
+        return;
+    }
+
+    filteredItems.forEach(item => {
+        const project = projects.find(p => p.id === item.project);
+        const itemStatus = getItemStatus(item);
+        const daysUntil = getDaysUntilDue(item.dueDate);
+        
+        let daysText = '';
+        if (itemStatus === 'urgent') daysText = `Due ${daysUntil === 0 ? 'today' : 'tomorrow'}!`;
+        else if (itemStatus === 'overdue') daysText = `${Math.abs(daysUntil)} days overdue`;
+        else if (daysUntil >= 0) daysText = `Due in ${daysUntil} days`;
+
+        const itemCard = document.createElement('div');
+        itemCard.className = `item-card ${item.type} ${itemStatus}`;
+        itemCard.innerHTML = `
+            <div class="item-header">
+                <div class="item-title-section">
+                    <h4>${getItemTypeDisplay(item.type)}</h4>
+                    <p class="item-project">${highlightSearchTerm(project?.name || 'Unknown Project')}</p>
+                </div>
+                <div class="item-status-section">
+                    <span class="item-status ${itemStatus}">${itemStatus.charAt(0).toUpperCase() + itemStatus.slice(1)}</span>
+                    ${daysText ? `<span class="days-until">${daysText}</span>` : ''}
+                </div>
+            </div>
+            <div class="item-content">
+                ${getItemDisplayContent(item)}
+            </div>
+            <div class="item-actions">
+                <button class="btn btn-sm btn-secondary" onclick="contactItem('${item.id}')">
+                    <i class="fas fa-phone"></i> Contact
+                </button>
+                <button class="btn btn-sm btn-info" onclick="editItem('${item.id}')">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-primary" onclick="completeItem('${item.id}')">
+                    <i class="fas fa-check"></i> Complete
+                </button>
+            </div>
+        `;
+        
+        itemsContainer.appendChild(itemCard);
+    });
+}
+
+// Highlight search terms in text
+function highlightSearchTerm(text) {
+    if (!currentSearchTerm || !text) return text;
+    
+    const regex = new RegExp(`(${currentSearchTerm})`, 'gi');
+    return text.replace(regex, '<span class="search-highlight">$1</span>');
+}
+
+// Update active filters display
+function updateActiveFiltersDisplay() {
+    const activeFiltersSection = document.getElementById('active-filters');
+    const activeFiltersTags = document.getElementById('active-filters-tags');
+    
+    const activeTags = [];
+    
+    const searchTerm = document.getElementById('search-input').value;
+    const pmFilter = document.getElementById('pm-filter').value;
+    const typeFilter = document.getElementById('type-filter').value;
+    const statusFilter = document.getElementById('status-filter').value;
+    
+    if (searchTerm) activeTags.push({ type: 'search', value: searchTerm, label: `Search: "${searchTerm}"` });
+    if (pmFilter) activeTags.push({ type: 'pm', value: pmFilter, label: `PM: ${pmFilter}` });
+    if (typeFilter) activeTags.push({ type: 'type', value: typeFilter, label: `Type: ${getItemTypeDisplay(typeFilter)}` });
+    if (statusFilter) activeTags.push({ type: 'status', value: statusFilter, label: `Status: ${statusFilter}` });
+    
+    // Check advanced filters
+    const dateFrom = document.getElementById('date-from')?.value;
+    const dateTo = document.getElementById('date-to')?.value;
+    const dueDateFrom = document.getElementById('due-date-from')?.value;
+    const dueDateTo = document.getElementById('due-date-to')?.value;
+    const ballInCourtFilter = document.getElementById('ball-in-court-filter')?.value;
+    const priorityFilter = document.getElementById('priority-filter')?.value;
+    
+    if (dateFrom || dateTo) {
+        const dateRange = `${dateFrom || 'start'} to ${dateTo || 'end'}`;
+        activeTags.push({ type: 'dateRange', value: '', label: `Date: ${dateRange}` });
+    }
+    if (dueDateFrom || dueDateTo) {
+        const dueDateRange = `${dueDateFrom || 'start'} to ${dueDateTo || 'end'}`;
+        activeTags.push({ type: 'dueDateRange', value: '', label: `Due: ${dueDateRange}` });
+    }
+    if (ballInCourtFilter) activeTags.push({ type: 'ballInCourt', value: ballInCourtFilter, label: `Ball in Court: ${ballInCourtFilter}` });
+    if (priorityFilter) activeTags.push({ type: 'priority', value: priorityFilter, label: `Priority: ${priorityFilter}` });
+    
+    if (activeTags.length === 0) {
+        activeFiltersSection.style.display = 'none';
+        return;
+    }
+    
+    activeFiltersSection.style.display = 'flex';
+    activeFiltersTags.innerHTML = activeTags.map(tag => `
+        <div class="filter-tag">
+            <span>${tag.label}</span>
+            <span class="remove-filter" onclick="removeActiveFilter('${tag.type}', '${tag.value}')">
+                <i class="fas fa-times"></i>
+            </span>
+        </div>
+    `).join('');
+}
+
+// Remove individual active filter
+function removeActiveFilter(type, value) {
+    switch (type) {
+        case 'search':
+            document.getElementById('search-input').value = '';
+            clearSearch();
+            break;
+        case 'pm':
+            document.getElementById('pm-filter').value = '';
+            break;
+        case 'type':
+            document.getElementById('type-filter').value = '';
+            break;
+        case 'status':
+            document.getElementById('status-filter').value = '';
+            break;
+        case 'dateRange':
+            if (document.getElementById('date-from')) document.getElementById('date-from').value = '';
+            if (document.getElementById('date-to')) document.getElementById('date-to').value = '';
+            break;
+        case 'dueDateRange':
+            if (document.getElementById('due-date-from')) document.getElementById('due-date-from').value = '';
+            if (document.getElementById('due-date-to')) document.getElementById('due-date-to').value = '';
+            break;
+        case 'ballInCourt':
+            if (document.getElementById('ball-in-court-filter')) document.getElementById('ball-in-court-filter').value = '';
+            break;
+        case 'priority':
+            if (document.getElementById('priority-filter')) document.getElementById('priority-filter').value = '';
+            break;
+    }
+    
+    performSearch();
 }
 
 // Excel Export Functions

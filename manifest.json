@@ -1,0 +1,49 @@
+{
+  "name": "MHC Project Tracker",
+  "short_name": "MHC Tracker",
+  "description": "Construction project management and hot ticket tracking system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiMxZTNhOGEiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9IiNmYmJmMjQiPgo8cGF0aCBkPSJNMjU2IDMySDIzMkg5NmMtMTcuNjcgMC0zMiAxNC4zMy0zMiAzMnY5NmMwIDE3LjY3IDE0LjMzIDMyIDMyIDMyaDEzNmMxNy42NyAwIDMyLTE0LjMzIDMyLTMyVjY0YzAtMTcuNjctMTQuMzMtMzItMzItMzJ6Ii8+CjxwYXRoIGQ9Ik00NDggMzI4SDMxMmMtMTcuNjcgMC0zMiAxNC4zMy0zMiAzMnY5NmMwIDE3LjY3IDE0LjMzIDMyIDMyIDMyaDEzNmMxNy42NyAwIDMyLTE0LjMzIDMyLTMydi05NmMwLTE3LjY3LTE0LjMzLTMyLTMyLTMyeiIvPgo8cGF0aCBkPSJNNDQ4IDEyOEgzMTJjLTE3LjY3IDAtMzIgMTQuMzMtMzIgMzJ2OTZjMCAxNy42NyAxNC4zMyAzMiAzMiAzMmgxMzZjMTcuNjcgMCAzMi0xNC4zMyAzMi0zMnYtOTZjMC0xNy42Ny0xNC4zMy0zMi0zMi0zMnoiLz4KPHN2Zz4KPC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iNjQiIGZpbGw9IiMxZTNhOGEiLz4KPHN2ZyB4PSIxMjgiIHk9IjEyOCIgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSIjZmJiZjI0Ij4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9IiNmYmJmMjQiPgo8cGF0aCBkPSJNNDY0IDMySDQ0MEgyNDBjLTI2LjUxIDAtNDggMjEuNDktNDggNDh2MTQ0YzAgMjYuNTEgMjEuNDkgNDggNDggNDhoMjAwYzI2LjUxIDAgNDgtMjEuNDkgNDgtNDhWODBjMC0yNi41MS0yMS40OS00OC00OC00OHoiLz4KPHN2ZyB4PSIxMjgiIHk9IjEyOCIgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSIjZmJiZjI0Ij4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9IiNmYmJmMjQiPgo8cGF0aCBkPSJNNDY0IDMySDQ0MEgyNDBjLTI2LjUxIDAtNDggMjEuNDktNDggNDh2MTQ0YzAgMjYuNTEgMjEuNDkgNDggNDggNDhoMjAwYzI2LjUxIDAgNDgtMjEuNDkgNDgtNDhWODBjMC0yNi41MS0yMS40OS00OC00OC00OHoiLz4KPC9zdmc+Cjwvc3ZnPgo8L3N2Zz4=",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "shortcuts": [
+    {
+      "name": "Add T&M Ticket",
+      "short_name": "T&M",
+      "description": "Add a new Time & Materials ticket",
+      "url": "/?action=add-tm",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSIjMWUzYThhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0yNTYgOEMxMTkgOCA4IDExOSA4IDI1NnMxMTEgMjQ4IDI0OCAyNDggMjQ4LTExMSAyNDgtMjQ4UzM5MyA4IDI1NiA4em0wIDQ0OGMtMTEwLjUgMC0yMDAtODkuNS0yMDAtMjAwUzE0NS41IDU2IDI1NiA1NnMyMDAgODkuNSAyMDAgMjAwLTg5LjUgMjAwLTIwMCAyMDB6bTYxLjgtMTA0LjQtODQtNDJjLTYuOC0zLjQtMTEuOC0xMC43LTExLjgtMTguNlYxNTJjMC04LjggNy4yLTE2IDE2LTE2czE2IDcuMiAxNiAxNnYxMzEuNmw3NS4yIDM3LjZjNy45IDMuOSAxMS4xIDEzLjYgNy4yIDIxLjUtMy45IDcuOS0xMy42IDExLjEtMjEuNCA3LjJ6Ii8+PC9zdmc+",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Search Items",
+      "short_name": "Search",
+      "description": "Search and filter items",
+      "url": "/?action=search",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSIjMWUzYThhIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik01MDUgNDQybC05OSA5OWMtMTUgMTUtNDEgMTUtNTYgMGwtMzUtMzVjLTE1LTE1LTE1LTQxIDAtNTZsOTktOTljMTUtMTUgNDEtMTUgNTYgMGwzNSAzNWMxNSAxNSAxNSA0MSAwIDU2ek00NTcuMSAzMzUuOGwtOTktOTljLTE1LTE1LTQxLTE1LTU2IDBsLTM1IDM1Yy0xNSAxNS0xNSA0MSAwIDU2bDk5IDk5YzE1IDE1IDQxIDE1IDU2IDBsMzUtMzVjMTUtMTUgMTUtNDEgMC01NnoiLz48L3N2Zz4=",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

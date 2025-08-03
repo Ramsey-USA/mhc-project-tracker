@@ -2,11 +2,63 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="MHC Construction Project Tracker - Manage hot ticket items, track project progress, and streamline construction workflows.">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="MHC Tracker">
+    
     <title>MHC Project Tracker</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- PWA Installation Script -->
+    <script>
+        // PWA Installation prompt
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install button in header actions
+            const installButton = document.createElement('button');
+            installButton.className = 'btn btn-info btn-sm';
+            installButton.innerHTML = '<i class="fas fa-download"></i> Install App';
+            installButton.style.display = 'none';
+            installButton.onclick = async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`User response to the install prompt: ${outcome}`);
+                    deferredPrompt = null;
+                    installButton.style.display = 'none';
+                }
+            };
+            
+            // Add to header actions when DOM is ready
+            document.addEventListener('DOMContentLoaded', () => {
+                const headerActions = document.querySelector('.header-actions');
+                if (headerActions && !navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) {
+                    installButton.style.display = 'inline-flex';
+                    headerActions.appendChild(installButton);
+                }
+            });
+        });
+        
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('MHC Project Tracker was installed');
+        });
+    </script>
 </head>
 <body>
     <!-- Header -->
@@ -114,11 +166,33 @@
             </div>
         </section>
 
-        <!-- Search and Filter -->
+        <!-- Enhanced Search and Filter -->
         <section class="filter-section">
-            <div class="filter-controls">
-                <input type="text" id="search-input" placeholder="Search items..." onkeyup="filterItems()">
-                <select id="pm-filter" onchange="filterItems()">
+            <div class="filter-header">
+                <h3><i class="fas fa-filter"></i> Search & Filter</h3>
+                <div class="filter-actions">
+                    <button class="btn btn-sm btn-secondary" onclick="toggleAdvancedFilters()">
+                        <i class="fas fa-sliders-h"></i> Advanced
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="clearAllFilters()">
+                        <i class="fas fa-times"></i> Clear All
+                    </button>
+                    <button class="btn btn-sm btn-info" onclick="saveCurrentFilters()">
+                        <i class="fas fa-bookmark"></i> Save Filter
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Basic Filters -->
+            <div class="filter-controls basic-filters">
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Search across all fields..." onkeyup="performSearch()" autocomplete="off">
+                    <i class="fas fa-search search-icon"></i>
+                    <button class="clear-search" onclick="clearSearch()" style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <select id="pm-filter" onchange="filterItems()" multiple="false">
                     <option value="">All PMs</option>
                     <option value="Makayla">Makayla</option>
                     <option value="Ben">Ben</option>
@@ -140,6 +214,68 @@
                     <option value="pending">Pending</option>
                     <option value="completed">Completed</option>
                 </select>
+            </div>
+
+            <!-- Advanced Filters (Initially Hidden) -->
+            <div class="advanced-filters" id="advanced-filters" style="display: none;">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Date Range:</label>
+                        <div class="date-range">
+                            <input type="date" id="date-from" onchange="filterItems()" placeholder="From">
+                            <span>to</span>
+                            <input type="date" id="date-to" onchange="filterItems()" placeholder="To">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Due Date Range:</label>
+                        <div class="date-range">
+                            <input type="date" id="due-date-from" onchange="filterItems()" placeholder="From">
+                            <span>to</span>
+                            <input type="date" id="due-date-to" onchange="filterItems()" placeholder="To">
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Ball in Court:</label>
+                        <select id="ball-in-court-filter" onchange="filterItems()">
+                            <option value="">All</option>
+                            <option value="mhc">MHC</option>
+                            <option value="client">Client</option>
+                            <option value="vendor">Vendor</option>
+                            <option value="subcontractor">Subcontractor</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Priority:</label>
+                        <select id="priority-filter" onchange="filterItems()">
+                            <option value="">All Priorities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Filters -->
+            <div class="saved-filters" id="saved-filters" style="display: none;">
+                <div class="saved-filters-header">
+                    <span>Saved Filters:</span>
+                </div>
+                <div class="saved-filters-list" id="saved-filters-list">
+                    <!-- Saved filters will be populated here -->
+                </div>
+            </div>
+
+            <!-- Active Filters Display -->
+            <div class="active-filters" id="active-filters" style="display: none;">
+                <span class="active-filters-label">Active Filters:</span>
+                <div class="active-filters-tags" id="active-filters-tags">
+                    <!-- Active filter tags will be displayed here -->
+                </div>
             </div>
         </section>
 
