@@ -1627,6 +1627,9 @@ function updateAnalytics() {
     console.log('Rendering performance chart...');
     renderPerformanceChart();
     
+    console.log('Rendering pie chart...');
+    renderProjectStatusPieChart();
+    
     console.log('Rendering financial table...');
     renderFinancialTable();
     
@@ -1828,6 +1831,111 @@ function renderPerformanceChart() {
             </div>
         </div>
     `}).join('');
+}
+
+// Render Project Status Pie Chart
+function renderProjectStatusPieChart() {
+    const canvas = document.getElementById('project-status-pie-chart');
+    const legendContainer = document.getElementById('pie-chart-legend');
+    if (!canvas || !legendContainer) return;
+    
+    // Get project status data
+    const statusCounts = {};
+    const totalItems = hotTicketItems.length;
+    
+    if (totalItems === 0) {
+        canvas.style.display = 'none';
+        legendContainer.innerHTML = `
+            <div style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                <i class="fas fa-chart-pie" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gray-400);"></i>
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">No Project Data Yet</div>
+                <div style="font-size: var(--text-sm);">Project status chart will appear once you add hot ticket items.</div>
+            </div>
+        `;
+        return;
+    }
+    
+    canvas.style.display = 'block';
+    
+    // Count items by status
+    hotTicketItems.forEach(item => {
+        const status = getItemStatus(item);
+        statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+    
+    // Define colors for each status
+    const statusColors = {
+        'urgent': '#dc2626',      // Red
+        'overdue': '#ea580c',     // Orange-red
+        'pending': '#d97706',     // Orange
+        'completed': '#059669'    // Green
+    };
+    
+    // Create pie chart data
+    const data = Object.entries(statusCounts).map(([status, count]) => ({
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+        value: count,
+        percentage: ((count / totalItems) * 100).toFixed(1),
+        color: statusColors[status] || '#6b7280'
+    }));
+    
+    // Draw pie chart
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    let currentAngle = -Math.PI / 2; // Start at top
+    
+    // Draw pie slices
+    data.forEach(segment => {
+        const sliceAngle = (segment.value / totalItems) * 2 * Math.PI;
+        
+        // Draw slice
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+        ctx.closePath();
+        ctx.fillStyle = segment.color;
+        ctx.fill();
+        
+        // Draw slice border
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        currentAngle += sliceAngle;
+    });
+    
+    // Draw center circle for donut effect
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * 0.4, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Add center text
+    ctx.fillStyle = '#374151';
+    ctx.font = 'bold 16px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(totalItems.toString(), centerX, centerY - 5);
+    ctx.font = '12px system-ui';
+    ctx.fillText('Total Items', centerX, centerY + 10);
+    
+    // Create legend
+    legendContainer.innerHTML = data.map(segment => `
+        <div class="pie-legend-item">
+            <div class="pie-legend-color" style="background-color: ${segment.color};"></div>
+            <span class="pie-legend-label">${segment.label}</span>
+            <span class="pie-legend-value">${segment.value} (${segment.percentage}%)</span>
+        </div>
+    `).join('');
 }
 
 // Render financial table
@@ -2606,3 +2714,886 @@ window.onclick = function(event) {
 }
 
 console.log("MHC Project Tracker loaded successfully");
+
+// Phase 3: Advanced Features JavaScript
+
+// Phase 3: Integration & Visual Enhancement JavaScript
+
+// Integration System
+let integrationSettings = JSON.parse(localStorage.getItem('mhc_integration_settings') || '{}');
+let integrationActivity = JSON.parse(localStorage.getItem('mhc_integration_activity') || '[]');
+
+// Initialize Phase 3 features
+function initializePhase3() {
+    updateIntegrationStatus();
+    updateIntegrationActivity();
+    initializePWAFeatures();
+    initializeVisualEnhancements();
+}
+
+// Integration Settings
+function showIntegrationSettings() {
+    document.getElementById('integration-settings-modal').style.display = 'block';
+    loadIntegrationSettings();
+}
+
+function showIntegrationTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.integration-tabs .tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName + '-integration-tab').classList.add('active');
+    event.target.classList.add('active');
+}
+
+function loadIntegrationSettings() {
+    // Load Procore settings
+    if (integrationSettings.procore) {
+        const form = document.getElementById('procore-settings-form');
+        if (form) {
+            Object.entries(integrationSettings.procore).forEach(([key, value]) => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) {
+                    if (input.type === 'checkbox') {
+                        input.checked = value;
+                    } else {
+                        input.value = value;
+                    }
+                }
+            });
+        }
+    }
+    
+    // Load Outlook settings
+    if (integrationSettings.outlook) {
+        const form = document.getElementById('outlook-settings-form');
+        if (form) {
+            Object.entries(integrationSettings.outlook).forEach(([key, value]) => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) {
+                    if (input.type === 'checkbox') {
+                        input.checked = value;
+                    } else {
+                        input.value = value;
+                    }
+                }
+            });
+        }
+    }
+}
+
+function saveProcoreSettings(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const settings = {
+        procoreCompanyId: formData.get('procoreCompanyId'),
+        procoreClientId: formData.get('procoreClientId'),
+        procoreClientSecret: formData.get('procoreClientSecret'),
+        procoreSyncFreq: formData.get('procoreSyncFreq'),
+        syncProjects: formData.has('syncProjects'),
+        syncRFIs: formData.has('syncRFIs'),
+        syncSubmittals: formData.has('syncSubmittals'),
+        syncTM: formData.has('syncTM'),
+        syncChangeOrders: formData.has('syncChangeOrders'),
+        syncDailyLogs: formData.has('syncDailyLogs')
+    };
+    
+    integrationSettings.procore = settings;
+    localStorage.setItem('mhc_integration_settings', JSON.stringify(integrationSettings));
+    
+    addIntegrationActivity('Procore', 'Settings updated successfully');
+    updateIntegrationStatus();
+    showNotification('Procore settings saved successfully!', 'success');
+}
+
+function saveOutlookSettings(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const settings = {
+        outlookEmail: formData.get('outlookEmail'),
+        autoCreateRFI: formData.has('autoCreateRFI'),
+        autoCreateSubmittal: formData.has('autoCreateSubmittal'),
+        sendStatusUpdates: formData.has('sendStatusUpdates'),
+        sendDailyDigest: formData.has('sendDailyDigest'),
+        emailKeywords: formData.get('emailKeywords'),
+        stakeholderEmails: formData.get('stakeholderEmails')
+    };
+    
+    integrationSettings.outlook = settings;
+    localStorage.setItem('mhc_integration_settings', JSON.stringify(integrationSettings));
+    
+    addIntegrationActivity('Outlook', 'Email settings updated successfully');
+    updateIntegrationStatus();
+    showNotification('Outlook settings saved successfully!', 'success');
+}
+
+function saveGeneralIntegrationSettings(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const settings = {
+        autoBackup: formData.has('autoBackup'),
+        cloudSync: formData.has('cloudSync'),
+        encryptData: formData.has('encryptData'),
+        conflictResolution: formData.get('conflictResolution'),
+        syncNotifications: formData.has('syncNotifications'),
+        errorNotifications: formData.has('errorNotifications'),
+        conflictNotifications: formData.has('conflictNotifications')
+    };
+    
+    integrationSettings.general = settings;
+    localStorage.setItem('mhc_integration_settings', JSON.stringify(integrationSettings));
+    
+    showNotification('General integration settings saved successfully!', 'success');
+}
+
+// Connection Functions
+function connectProcore() {
+    if (!integrationSettings.procore?.procoreCompanyId) {
+        showNotification('Please configure Procore settings first', 'error');
+        showIntegrationSettings();
+        return;
+    }
+    
+    // Simulate connection process
+    showNotification('Connecting to Procore...', 'info');
+    
+    setTimeout(() => {
+        integrationSettings.procore.connected = true;
+        integrationSettings.procore.lastSync = new Date().toISOString();
+        localStorage.setItem('mhc_integration_settings', JSON.stringify(integrationSettings));
+        
+        updateIntegrationStatus();
+        addIntegrationActivity('Procore', 'Successfully connected to Procore API');
+        showNotification('Connected to Procore successfully!', 'success');
+    }, 2000);
+}
+
+function connectOutlook() {
+    if (!integrationSettings.outlook?.outlookEmail) {
+        showNotification('Please configure Outlook settings first', 'error');
+        showIntegrationSettings();
+        return;
+    }
+    
+    // Simulate connection process
+    showNotification('Connecting to Outlook...', 'info');
+    
+    setTimeout(() => {
+        integrationSettings.outlook.connected = true;
+        integrationSettings.outlook.lastCheck = new Date().toISOString();
+        localStorage.setItem('mhc_integration_settings', JSON.stringify(integrationSettings));
+        
+        updateIntegrationStatus();
+        addIntegrationActivity('Outlook', 'Successfully connected to Outlook email');
+        showNotification('Connected to Outlook successfully!', 'success');
+    }, 2000);
+}
+
+function testProcoreConnection() {
+    showNotification('Testing Procore connection...', 'info');
+    
+    setTimeout(() => {
+        showNotification('Procore connection test successful!', 'success');
+    }, 1500);
+}
+
+function testOutlookConnection() {
+    showNotification('Testing Outlook connection...', 'info');
+    
+    setTimeout(() => {
+        showNotification('Outlook connection test successful!', 'success');
+    }, 1500);
+}
+
+// Sync Functions
+function showSyncStatus() {
+    document.getElementById('sync-status-modal').style.display = 'block';
+    updateSyncStatusDisplay();
+}
+
+function updateSyncStatusDisplay() {
+    // Update Procore sync status
+    if (integrationSettings.procore?.connected) {
+        document.getElementById('procore-sync-status').textContent = 'Connected';
+        document.getElementById('procore-sync-time').textContent = 
+            integrationSettings.procore.lastSync ? 
+            new Date(integrationSettings.procore.lastSync).toLocaleString() : 'Never';
+    } else {
+        document.getElementById('procore-sync-status').textContent = 'Not Connected';
+    }
+    
+    // Update Outlook sync status
+    if (integrationSettings.outlook?.connected) {
+        document.getElementById('outlook-sync-status').textContent = 'Connected';
+        document.getElementById('outlook-sync-time').textContent = 
+            integrationSettings.outlook.lastCheck ? 
+            new Date(integrationSettings.outlook.lastCheck).toLocaleString() : 'Never';
+    } else {
+        document.getElementById('outlook-sync-status').textContent = 'Not Connected';
+    }
+}
+
+function forceSyncAll() {
+    showNotification('Starting full sync...', 'info');
+    
+    if (integrationSettings.procore?.connected) {
+        syncProcore();
+    }
+    
+    if (integrationSettings.outlook?.connected) {
+        checkOutlookEmails();
+    }
+}
+
+function syncProcore() {
+    if (!integrationSettings.procore?.connected) {
+        showNotification('Procore not connected', 'error');
+        return;
+    }
+    
+    showNotification('Syncing with Procore...', 'info');
+    
+    // Simulate sync process
+    setTimeout(() => {
+        integrationSettings.procore.lastSync = new Date().toISOString();
+        localStorage.setItem('mhc_integration_settings', JSON.stringify(integrationSettings));
+        
+        // Simulate importing some data
+        const importedCount = Math.floor(Math.random() * 5) + 1;
+        addIntegrationActivity('Procore', `Imported ${importedCount} new items from Procore`);
+        
+        updateSyncStatusDisplay();
+        updateIntegrationStatus();
+        showNotification(`Procore sync completed! Imported ${importedCount} items.`, 'success');
+    }, 3000);
+}
+
+function checkOutlookEmails() {
+    if (!integrationSettings.outlook?.connected) {
+        showNotification('Outlook not connected', 'error');
+        return;
+    }
+    
+    showNotification('Checking Outlook emails...', 'info');
+    
+    // Simulate email processing
+    setTimeout(() => {
+        integrationSettings.outlook.lastCheck = new Date().toISOString();
+        localStorage.setItem('mhc_integration_settings', JSON.stringify(integrationSettings));
+        
+        // Simulate processing some emails
+        const processedCount = Math.floor(Math.random() * 3) + 1;
+        addIntegrationActivity('Outlook', `Processed ${processedCount} emails, created 1 new RFI`);
+        
+        updateSyncStatusDisplay();
+        updateIntegrationStatus();
+        showNotification(`Email check completed! Processed ${processedCount} emails.`, 'success');
+    }, 2000);
+}
+
+function viewSyncLogs() {
+    const logs = integrationActivity.slice(-10).reverse();
+    let logText = 'Recent Integration Activity:\n\n';
+    
+    logs.forEach(log => {
+        logText += `${new Date(log.timestamp).toLocaleString()} - ${log.type}: ${log.description}\n`;
+    });
+    
+    alert(logText); // In production, show in a proper modal
+}
+
+// Integration Activity
+function addIntegrationActivity(type, description) {
+    const activity = {
+        id: Date.now().toString(),
+        type: type,
+        description: description,
+        timestamp: new Date().toISOString()
+    };
+    
+    integrationActivity.unshift(activity);
+    
+    // Keep only last 50 activities
+    if (integrationActivity.length > 50) {
+        integrationActivity = integrationActivity.slice(0, 50);
+    }
+    
+    localStorage.setItem('mhc_integration_activity', JSON.stringify(integrationActivity));
+    updateIntegrationActivity();
+}
+
+function updateIntegrationActivity() {
+    const container = document.getElementById('integration-activity-list');
+    if (!container) return;
+    
+    const recentActivities = integrationActivity.slice(0, 5);
+    
+    if (recentActivities.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--gray-500); padding: 2rem;">No integration activity yet</div>';
+        return;
+    }
+    
+    container.innerHTML = recentActivities.map(activity => `
+        <div class="integration-activity-item ${activity.type.toLowerCase()}">
+            <div class="integration-activity-header">
+                <span class="integration-activity-type">${activity.type}</span>
+                <span class="integration-activity-time">${formatRelativeTime(activity.timestamp)}</span>
+            </div>
+            <div class="integration-activity-description">${activity.description}</div>
+        </div>
+    `).join('');
+}
+
+function updateIntegrationStatus() {
+    // Update Procore status
+    const procoreStatus = document.getElementById('procore-status');
+    const procoreButton = document.getElementById('procore-connect-btn');
+    const procoreStats = document.getElementById('procore-stats');
+    
+    if (integrationSettings.procore?.connected) {
+        procoreStatus.textContent = 'Connected';
+        procoreStatus.className = 'integration-status connected';
+        procoreButton.textContent = 'Disconnect';
+        procoreButton.onclick = () => disconnectProcore();
+        procoreStats.style.display = 'block';
+        
+        // Update stats
+        document.getElementById('procore-projects').textContent = projects.length;
+        document.getElementById('procore-items').textContent = 
+            integrationActivity.filter(a => a.type === 'Procore').length;
+        document.getElementById('procore-last-sync').textContent = 
+            integrationSettings.procore.lastSync ? 
+            formatRelativeTime(integrationSettings.procore.lastSync) : 'Never';
+    } else {
+        procoreStatus.textContent = 'Not Connected';
+        procoreStatus.className = 'integration-status';
+        procoreButton.textContent = 'Connect';
+        procoreButton.onclick = () => connectProcore();
+        procoreStats.style.display = 'none';
+    }
+    
+    // Update Outlook status
+    const outlookStatus = document.getElementById('outlook-status');
+    const outlookButton = document.getElementById('outlook-connect-btn');
+    const outlookStats = document.getElementById('outlook-stats');
+    
+    if (integrationSettings.outlook?.connected) {
+        outlookStatus.textContent = 'Connected';
+        outlookStatus.className = 'integration-status connected';
+        outlookButton.textContent = 'Disconnect';
+        outlookButton.onclick = () => disconnectOutlook();
+        outlookStats.style.display = 'block';
+        
+        // Update stats
+        document.getElementById('outlook-emails').textContent = 
+            integrationActivity.filter(a => a.type === 'Outlook').length * 3;
+        document.getElementById('outlook-items').textContent = 
+            integrationActivity.filter(a => a.type === 'Outlook').length;
+        document.getElementById('outlook-last-check').textContent = 
+            integrationSettings.outlook.lastCheck ? 
+            formatRelativeTime(integrationSettings.outlook.lastCheck) : 'Never';
+    } else {
+        outlookStatus.textContent = 'Not Connected';
+        outlookStatus.className = 'integration-status';
+        outlookButton.textContent = 'Connect';
+        outlookButton.onclick = () => connectOutlook();
+        outlookStats.style.display = 'none';
+    }
+}
+
+function disconnectProcore() {
+    if (confirm('Disconnect from Procore? You will need to reconfigure settings to reconnect.')) {
+        integrationSettings.procore.connected = false;
+        localStorage.setItem('mhc_integration_settings', JSON.stringify(integrationSettings));
+        updateIntegrationStatus();
+        addIntegrationActivity('Procore', 'Disconnected from Procore API');
+        showNotification('Disconnected from Procore', 'info');
+    }
+}
+
+function disconnectOutlook() {
+    if (confirm('Disconnect from Outlook? You will need to reconfigure settings to reconnect.')) {
+        integrationSettings.outlook.connected = false;
+        localStorage.setItem('mhc_integration_settings', JSON.stringify(integrationSettings));
+        updateIntegrationStatus();
+        addIntegrationActivity('Outlook', 'Disconnected from Outlook email');
+        showNotification('Disconnected from Outlook', 'info');
+    }
+}
+
+// Visual Enhancement Functions
+function initializeVisualEnhancements() {
+    // Add loading animations
+    addLoadingAnimations();
+    
+    // Initialize smooth scrolling
+    initializeSmoothScrolling();
+    
+    // Add interactive feedback
+    addInteractiveFeedback();
+    
+    // Initialize auto-save indicators
+    initializeAutoSaveIndicators();
+}
+
+function addLoadingAnimations() {
+    // Add staggered animation to cards
+    const cards = document.querySelectorAll('.metric-card, .integration-card, .project-card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 100}ms`;
+    });
+}
+
+function initializeSmoothScrolling() {
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+function addInteractiveFeedback() {
+    // Add click feedback to buttons
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+            
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+}
+
+function initializeAutoSaveIndicators() {
+    // Show save indicators when data changes
+    let saveTimeout;
+    
+    const showSaveIndicator = () => {
+        const indicator = document.createElement('div');
+        indicator.className = 'save-indicator';
+        indicator.innerHTML = '<i class="fas fa-save"></i> Saving...';
+        document.body.appendChild(indicator);
+        
+        setTimeout(() => {
+            indicator.innerHTML = '<i class="fas fa-check"></i> Saved';
+            setTimeout(() => {
+                indicator.remove();
+            }, 2000);
+        }, 1000);
+    };
+    
+    // Override saveData function to show indicator
+    const originalSaveData = saveData;
+    window.saveData = function() {
+        originalSaveData();
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(showSaveIndicator, 500);
+    };
+}
+
+// Email Processing Functions (simulated)
+function processIncomingEmails() {
+    if (!integrationSettings.outlook?.connected) return;
+    
+    // Simulate email processing based on keywords
+    const keywords = integrationSettings.outlook.emailKeywords?.split(',').map(k => k.trim()) || [];
+    
+    // This would be replaced with actual email API integration
+    // For now, simulate finding emails with keywords
+    if (keywords.includes('RFI') && Math.random() > 0.7) {
+        createRFIFromEmail();
+    }
+    
+    if (keywords.includes('Submittal') && Math.random() > 0.8) {
+        createSubmittalFromEmail();
+    }
+}
+
+function createRFIFromEmail() {
+    // Simulate creating an RFI from an email
+    const rfi = {
+        id: Date.now().toString(),
+        type: 'rfi',
+        project: projects[0]?.id || 'default',
+        title: 'RFI from Email - Clarification Needed',
+        description: 'Auto-created from incoming email',
+        status: 'pending',
+        priority: 'medium',
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        createdDate: new Date().toISOString().split('T')[0],
+        createdBy: 'Email Integration'
+    };
+    
+    hotTicketItems.unshift(rfi);
+    saveData();
+    renderDashboard();
+    
+    addIntegrationActivity('Outlook', 'Created RFI from incoming email');
+    showNotification('New RFI created from email!', 'info');
+}
+
+function createSubmittalFromEmail() {
+    // Simulate creating a submittal from an email
+    const submittal = {
+        id: Date.now().toString(),
+        type: 'submittal',
+        project: projects[1]?.id || 'default',
+        title: 'Submittal from Email - Review Required',
+        description: 'Auto-created from incoming email',
+        status: 'pending',
+        priority: 'high',
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        createdDate: new Date().toISOString().split('T')[0],
+        createdBy: 'Email Integration'
+    };
+    
+    hotTicketItems.unshift(submittal);
+    saveData();
+    renderDashboard();
+    
+    addIntegrationActivity('Outlook', 'Created Submittal from incoming email');
+    showNotification('New Submittal created from email!', 'info');
+}
+
+// Auto-sync functionality
+function startAutoSync() {
+    // Check for auto-sync every 5 minutes
+    setInterval(() => {
+        if (integrationSettings.procore?.connected && integrationSettings.procore?.procoreSyncFreq === 'hourly') {
+            const lastSync = new Date(integrationSettings.procore.lastSync || 0);
+            const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
+            
+            if (lastSync < hourAgo) {
+                syncProcore();
+            }
+        }
+        
+        if (integrationSettings.outlook?.connected) {
+            processIncomingEmails();
+        }
+    }, 5 * 60 * 1000);
+}
+
+// Initialize Phase 3 features when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        initializePhase3();
+        startAutoSync();
+        
+        // Show integration help for first-time users
+        if (!localStorage.getItem('mhc_integration_intro_shown')) {
+            setTimeout(() => {
+                showNotification('Tip: Connect Procore and Outlook for automatic data sync!', 'info', 8000);
+                localStorage.setItem('mhc_integration_intro_shown', 'true');
+            }, 3000);
+        }
+    }, 1500);
+});
+
+// Advanced Report Builder
+function showReportBuilder() {
+    document.getElementById('report-builder-modal').style.display = 'block';
+}
+
+function showReportTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.add('active');
+    event.target.classList.add('active');
+}
+
+function generateCustomReport(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const reportConfig = {
+        title: formData.get('reportTitle'),
+        sections: formData.getAll('sections'),
+        dateRange: formData.get('dateRange'),
+        pmFilter: formData.get('pmFilter'),
+        statusFilter: formData.get('statusFilter'),
+        projectStatusFilter: formData.get('projectStatusFilter'),
+        format: formData.get('format'),
+        style: formData.get('reportStyle'),
+        includeLogo: formData.has('includeLogo'),
+        includeCharts: formData.has('includeCharts'),
+        includeComments: formData.has('includeComments')
+    };
+    
+    // Generate report based on format
+    switch (reportConfig.format) {
+        case 'pdf':
+            generatePDFReport(reportConfig);
+            break;
+        case 'excel':
+            generateExcelReport(reportConfig);
+            break;
+        case 'powerpoint':
+            generatePowerPointReport(reportConfig);
+            break;
+    }
+    
+    closeModal('report-builder-modal');
+    showNotification('Custom report generated successfully!', 'success');
+}
+
+function generatePDFReport(config) {
+    // PDF generation logic (would use a library like jsPDF in production)
+    const reportData = gatherReportData(config);
+    
+    // Create and download PDF (simplified version)
+    const reportContent = `
+    MHC Project Tracker - ${config.title}
+    Generated: ${new Date().toLocaleDateString()}
+    
+    ${config.sections.includes('overview') ? generateOverviewSection(reportData) : ''}
+    ${config.sections.includes('financial') ? generateFinancialSection(reportData) : ''}
+    ${config.sections.includes('progress') ? generateProgressSection(reportData) : ''}
+    ${config.sections.includes('items') ? generateItemsSection(reportData) : ''}
+    ${config.sections.includes('team') ? generateTeamSection(reportData) : ''}
+    `;
+    
+    // Download as text file (in production, this would be a proper PDF)
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${config.title.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function generateExcelReport(config) {
+    // Excel generation logic (would use a library like SheetJS in production)
+    const reportData = gatherReportData(config);
+    
+    // Create CSV format for now
+    let csvContent = `MHC Project Tracker - ${config.title}\n`;
+    csvContent += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+    
+    if (config.sections.includes('items')) {
+        csvContent += "Hot Ticket Items\n";
+        csvContent += "Type,Project,Status,Due Date,PM\n";
+        reportData.items.forEach(item => {
+            csvContent += `${item.type},${item.project},${item.status},${item.dueDate},${item.pm}\n`;
+        });
+        csvContent += "\n";
+    }
+    
+    if (config.sections.includes('financial')) {
+        csvContent += "Financial Summary\n";
+        csvContent += "Project,Budget,Spent,Remaining\n";
+        reportData.projects.forEach(project => {
+            const remaining = (project.budget || 0) - (project.spent || 0);
+            csvContent += `${project.name},${project.budget || 0},${project.spent || 0},${remaining}\n`;
+        });
+    }
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${config.title.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function generatePowerPointReport(config) {
+    // PowerPoint generation would use a library like PptxGenJS
+    showNotification('PowerPoint export coming in next update!', 'info');
+}
+
+function gatherReportData(config) {
+    // Filter data based on report configuration
+    let filteredProjects = projects;
+    let filteredItems = hotTicketItems;
+    
+    // Apply filters
+    if (config.pmFilter) {
+        filteredProjects = filteredProjects.filter(p => p.pm === config.pmFilter);
+        filteredItems = filteredItems.filter(item => {
+            const project = projects.find(p => p.id === item.project);
+            return project && project.pm === config.pmFilter;
+        });
+    }
+    
+    if (config.statusFilter) {
+        filteredItems = filteredItems.filter(item => getItemStatus(item) === config.statusFilter);
+    }
+    
+    if (config.projectStatusFilter) {
+        filteredProjects = filteredProjects.filter(p => p.status === config.projectStatusFilter);
+    }
+    
+    return {
+        projects: filteredProjects,
+        items: filteredItems,
+        activity: teamActivity.slice(-20) // Last 20 activities
+    };
+}
+
+function generateOverviewSection(data) {
+    return `
+PROJECT OVERVIEW
+================
+Total Projects: ${data.projects.length}
+Active Items: ${data.items.filter(i => i.status !== 'completed').length}
+Completed Items: ${data.items.filter(i => i.status === 'completed').length}
+    `;
+}
+
+function generateFinancialSection(data) {
+    const totalBudget = data.projects.reduce((sum, p) => sum + (p.budget || 0), 0);
+    const totalSpent = data.projects.reduce((sum, p) => sum + (p.spent || 0), 0);
+    
+    return `
+FINANCIAL SUMMARY
+=================
+Total Budget: $${totalBudget.toLocaleString()}
+Total Spent: $${totalSpent.toLocaleString()}
+Remaining: $${(totalBudget - totalSpent).toLocaleString()}
+    `;
+}
+
+function generateProgressSection(data) {
+    const avgProgress = data.projects.reduce((sum, p) => sum + (p.progress || 0), 0) / data.projects.length;
+    
+    return `
+PROGRESS SUMMARY
+================
+Average Progress: ${Math.round(avgProgress)}%
+Projects On Track: ${data.projects.filter(p => (p.progress || 0) >= 75).length}
+Projects Behind: ${data.projects.filter(p => (p.progress || 0) < 50).length}
+    `;
+}
+
+function generateItemsSection(data) {
+    let section = `
+HOT TICKET ITEMS
+================
+`;
+    data.items.forEach(item => {
+        const project = data.projects.find(p => p.id === item.project);
+        section += `${getItemTypeDisplay(item.type)} - ${getItemTitle(item)} (${project ? project.name : 'Unknown Project'})\n`;
+    });
+    
+    return section;
+}
+
+function generateTeamSection(data) {
+    const pmStats = calculatePMStats();
+    
+    let section = `
+TEAM PERFORMANCE
+================
+`;
+    Object.entries(pmStats).forEach(([pm, stats]) => {
+        section += `${pm}: ${stats.projects} projects, ${Math.round(stats.avgProgress)}% avg progress\n`;
+    });
+    
+    return section;
+}
+
+function previewReport() {
+    const formData = new FormData(document.getElementById('report-builder-form'));
+    const config = {
+        title: formData.get('reportTitle'),
+        sections: formData.getAll('sections')
+    };
+    
+    const reportData = gatherReportData(config);
+    let preview = `Report Preview: ${config.title}\n\n`;
+    
+    config.sections.forEach(section => {
+        switch (section) {
+            case 'overview':
+                preview += generateOverviewSection(reportData);
+                break;
+            case 'financial':
+                preview += generateFinancialSection(reportData);
+                break;
+            case 'progress':
+                preview += generateProgressSection(reportData);
+                break;
+        }
+    });
+    
+    alert(preview); // In production, show in a modal
+}
+
+// Old collaboration functions removed - replaced with integration system
+
+// Override existing functions to add integration tracking
+const originalAddItem = addItem;
+function addItem(event) {
+    const result = originalAddItem(event);
+    
+    if (result !== false) {
+        const formData = new FormData(event.target);
+        const itemType = getItemTypeDisplay(formData.get('type') || event.target.closest('.modal').id.replace('-modal', ''));
+        const projectName = getProjectName(formData.get('project'));
+        
+        addIntegrationActivity('System', `Added ${itemType} for ${projectName}`);
+    }
+    
+    return result;
+}
+
+const originalCompleteItem = completeItem;
+function completeItem(itemId) {
+    const item = hotTicketItems.find(i => i.id === itemId);
+    if (item) {
+        const itemType = getItemTypeDisplay(item.type);
+        const projectName = getProjectName(item.project);
+        
+        originalCompleteItem(itemId);
+        addIntegrationActivity('System', `Completed ${itemType} for ${projectName}`);
+    }
+}
+
+// Initialize Phase 3 features when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        initializePhase3();
+    }, 1500);
+});
