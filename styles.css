@@ -2043,7 +2043,15 @@ a:hover {
 
 .charts-section {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+/* Pie Charts Section */
+.pie-charts-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: var(--space-6);
     margin-bottom: var(--space-8);
 }
@@ -2071,23 +2079,36 @@ a:hover {
 }
 
 .pie-chart-container canvas {
-    max-width: 250px;
-    max-height: 250px;
+    max-width: 300px;
+    max-height: 300px;
+    margin: 0 auto;
 }
 
 .pie-chart-legend {
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: center;
+    flex-direction: column;
+    gap: 0.5rem;
+    justify-content: flex-start;
     margin-top: 1rem;
+    max-width: 100%;
 }
 
 .pie-legend-item {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.25rem;
     font-size: 0.85rem;
+    background: var(--gray-50);
+    border-radius: 6px;
+    padding: 8px;
+    border: 1px solid var(--gray-200);
+    transition: all 0.2s ease;
+}
+
+.pie-legend-item:hover {
+    background: var(--gray-100);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .pie-legend-color {

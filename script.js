@@ -1627,8 +1627,9 @@ function updateAnalytics() {
     console.log('Rendering performance chart...');
     renderPerformanceChart();
     
-    console.log('Rendering pie chart...');
-    renderProjectStatusPieChart();
+    console.log('Rendering pie charts...');
+    renderValuationPieChart();
+    renderCompletionPieChart();
     
     console.log('Rendering financial table...');
     renderFinancialTable();
@@ -1833,23 +1834,23 @@ function renderPerformanceChart() {
     `}).join('');
 }
 
-// Render Project Status Pie Chart
-function renderProjectStatusPieChart() {
-    const canvas = document.getElementById('project-status-pie-chart');
-    const legendContainer = document.getElementById('pie-chart-legend');
+// Render PM Project Valuation Pie Chart
+function renderValuationPieChart() {
+    const canvas = document.getElementById('valuation-pie-chart');
+    const legendContainer = document.getElementById('valuation-legend');
     if (!canvas || !legendContainer) return;
     
-    // Get project status data
-    const statusCounts = {};
-    const totalItems = hotTicketItems.length;
+    // Calculate PM valuations from projects
+    const pmData = {};
+    let totalValuation = 0;
     
-    if (totalItems === 0) {
+    if (!projects || projects.length === 0) {
         canvas.style.display = 'none';
         legendContainer.innerHTML = `
             <div style="text-align: center; color: var(--gray-500); padding: 2rem;">
-                <i class="fas fa-chart-pie" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gray-400);"></i>
-                <div style="font-weight: 600; margin-bottom: 0.5rem;">No Project Data Yet</div>
-                <div style="font-size: var(--text-sm);">Project status chart will appear once you add hot ticket items.</div>
+                <i class="fas fa-dollar-sign" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gray-400);"></i>
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">No Valuation Data</div>
+                <div style="font-size: var(--text-sm);">Project valuation chart will show once you add projects with budget information.</div>
             </div>
         `;
         return;
@@ -1857,29 +1858,209 @@ function renderProjectStatusPieChart() {
     
     canvas.style.display = 'block';
     
-    // Count items by status
-    hotTicketItems.forEach(item => {
-        const status = getItemStatus(item);
-        statusCounts[status] = (statusCounts[status] || 0) + 1;
+    // Calculate total valuation per PM
+    projects.forEach(project => {
+        const pm = project.pm || 'Unassigned';
+        const budget = project.budget || 0;
+        
+        if (!pmData[pm]) {
+            pmData[pm] = {
+                totalBudget: 0,
+                totalSpent: 0,
+                projectCount: 0,
+                avgProgress: 0
+            };
+        }
+        
+        pmData[pm].totalBudget += budget;
+        pmData[pm].totalSpent += project.spent || 0;
+        pmData[pm].projectCount++;
+        pmData[pm].avgProgress += project.progress || 0;
+        
+        totalValuation += budget;
     });
     
-    // Define colors for each status
-    const statusColors = {
-        'urgent': '#dc2626',      // Red
-        'overdue': '#ea580c',     // Orange-red
-        'pending': '#d97706',     // Orange
-        'completed': '#059669'    // Green
+    // Calculate average progress for each PM
+    Object.keys(pmData).forEach(pm => {
+        pmData[pm].avgProgress = pmData[pm].avgProgress / pmData[pm].projectCount;
+    });
+    
+    if (totalValuation === 0) {
+        canvas.style.display = 'none';
+        legendContainer.innerHTML = `
+            <div style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                <i class="fas fa-chart-pie" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gray-400);"></i>
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">No Budget Data</div>
+                <div style="font-size: var(--text-sm);">Add project budgets to see valuation distribution.</div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Define colors for each PM
+    const pmColors = {
+        'Makayla': '#3b82f6',    // Blue
+        'Ben': '#10b981',        // Green  
+        'Jeremy': '#f59e0b',     // Orange
+        'Unassigned': '#6b7280'  // Gray
     };
     
     // Create pie chart data
-    const data = Object.entries(statusCounts).map(([status, count]) => ({
-        label: status.charAt(0).toUpperCase() + status.slice(1),
-        value: count,
-        percentage: ((count / totalItems) * 100).toFixed(1),
-        color: statusColors[status] || '#6b7280'
-    }));
+    const data = Object.entries(pmData)
+        .filter(([pm, data]) => data.totalBudget > 0)
+        .map(([pm, data]) => ({
+            label: pm,
+            value: data.totalBudget,
+            spent: data.totalSpent,
+            projectCount: data.projectCount,
+            percentage: ((data.totalBudget / totalValuation) * 100).toFixed(1),
+            color: pmColors[pm] || pmColors['Unassigned'],
+            efficiency: data.totalBudget > 0 ? (((data.totalBudget - data.totalSpent) / data.totalBudget) * 100).toFixed(1) : '0.0'
+        }))
+        .sort((a, b) => b.value - a.value);
     
     // Draw pie chart
+    drawPieChart(canvas, data, totalValuation, 'Total Budget', `$${(totalValuation / 1000000).toFixed(1)}M`);
+    
+    // Create legend
+    legendContainer.innerHTML = data.map(segment => `
+        <div class="pie-legend-item" style="border-left: 4px solid ${segment.color}; padding-left: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="pie-legend-color" style="background-color: ${segment.color};"></div>
+                    <span class="pie-legend-label" style="font-weight: 600;">${segment.label}</span>
+                </div>
+                <span class="pie-legend-value" style="background: ${segment.color}20; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; color: ${segment.color};">$${(segment.value / 1000000).toFixed(1)}M (${segment.percentage}%)</span>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--gray-600); margin-left: 22px; line-height: 1.4;">
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <span><strong>${segment.projectCount}</strong> projects</span>
+                    <span><strong>$${(segment.spent / 1000000).toFixed(1)}M</strong> spent</span>
+                    <span style="color: ${segment.efficiency >= 0 ? '#059669' : '#dc2626'}; font-weight: 600;">${segment.efficiency >= 0 ? '+' : ''}${segment.efficiency}% efficiency</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Render PM Project Completion Pie Chart
+function renderCompletionPieChart() {
+    const canvas = document.getElementById('completion-pie-chart');
+    const legendContainer = document.getElementById('completion-legend');
+    if (!canvas || !legendContainer) return;
+    
+    if (!projects || projects.length === 0) {
+        canvas.style.display = 'none';
+        legendContainer.innerHTML = `
+            <div style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                <i class="fas fa-tasks" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gray-400);"></i>
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">No Completion Data</div>
+                <div style="font-size: var(--text-sm);">Project completion chart will show once you add projects with progress information.</div>
+            </div>
+        `;
+        return;
+    }
+    
+    canvas.style.display = 'block';
+    
+    // Calculate completion data per PM
+    const pmData = {};
+    let totalWeightedCompletion = 0;
+    let totalProjects = 0;
+    
+    projects.forEach(project => {
+        const pm = project.pm || 'Unassigned';
+        const progress = project.progress || 0;
+        const weight = project.budget || 1; // Weight by budget, or 1 if no budget
+        
+        if (!pmData[pm]) {
+            pmData[pm] = {
+                weightedProgress: 0,
+                totalWeight: 0,
+                projectCount: 0,
+                completedProjects: 0,
+                avgProgress: 0
+            };
+        }
+        
+        pmData[pm].weightedProgress += progress * weight;
+        pmData[pm].totalWeight += weight;
+        pmData[pm].projectCount++;
+        pmData[pm].avgProgress += progress;
+        
+        if (progress >= 100) {
+            pmData[pm].completedProjects++;
+        }
+        
+        totalWeightedCompletion += progress * weight;
+        totalProjects++;
+    });
+    
+    // Calculate weighted average progress for each PM
+    Object.keys(pmData).forEach(pm => {
+        if (pmData[pm].totalWeight > 0) {
+            pmData[pm].weightedAvgProgress = pmData[pm].weightedProgress / pmData[pm].totalWeight;
+        } else {
+            pmData[pm].weightedAvgProgress = 0;
+        }
+        pmData[pm].avgProgress = pmData[pm].avgProgress / pmData[pm].projectCount;
+    });
+    
+    // Define colors for completion levels
+    const getCompletionColor = (progress) => {
+        if (progress >= 90) return '#059669'; // Green - Nearly complete
+        if (progress >= 70) return '#10b981'; // Light green - Good progress
+        if (progress >= 50) return '#f59e0b'; // Orange - Moderate progress
+        if (progress >= 25) return '#ef4444'; // Red - Low progress
+        return '#6b7280'; // Gray - Just started
+    };
+    
+    // Create pie chart data based on weighted completion
+    const data = Object.entries(pmData)
+        .map(([pm, data]) => {
+            const completionValue = data.weightedAvgProgress;
+            return {
+                label: pm,
+                value: data.totalWeight, // Size of slice based on total project value
+                completion: completionValue,
+                projectCount: data.projectCount,
+                completed: data.completedProjects,
+                percentage: totalWeightedCompletion > 0 ? ((data.weightedProgress / totalWeightedCompletion) * 100).toFixed(1) : '0.0',
+                color: getCompletionColor(completionValue),
+                avgProgress: data.avgProgress
+            };
+        })
+        .filter(item => item.value > 0)
+        .sort((a, b) => b.completion - a.completion);
+    
+    // Draw pie chart
+    const totalValue = data.reduce((sum, item) => sum + item.value, 0);
+    const avgCompletion = data.length > 0 ? (data.reduce((sum, item) => sum + item.completion, 0) / data.length).toFixed(1) : 0;
+    drawPieChart(canvas, data, totalValue, 'Avg Completion', `${avgCompletion}%`);
+    
+    // Create legend
+    legendContainer.innerHTML = data.map(segment => `
+        <div class="pie-legend-item" style="border-left: 4px solid ${segment.color}; padding-left: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="pie-legend-color" style="background-color: ${segment.color};"></div>
+                    <span class="pie-legend-label" style="font-weight: 600;">${segment.label}</span>
+                </div>
+                <span class="pie-legend-value" style="background: ${segment.color}20; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; color: ${segment.color};">${segment.completion.toFixed(1)}% avg</span>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--gray-600); margin-left: 22px; line-height: 1.4;">
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <span><strong>${segment.projectCount}</strong> projects</span>
+                    <span><strong>${segment.completed}</strong> completed</span>
+                    <span style="color: ${segment.color}; font-weight: 600;">${segment.completion.toFixed(0)}% weighted avg</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Helper function to draw pie charts
+function drawPieChart(canvas, data, total, centerLabel, centerValue) {
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
@@ -1888,26 +2069,30 @@ function renderProjectStatusPieChart() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    if (data.length === 0 || total === 0) return;
+    
     let currentAngle = -Math.PI / 2; // Start at top
     
     // Draw pie slices
     data.forEach(segment => {
-        const sliceAngle = (segment.value / totalItems) * 2 * Math.PI;
+        const sliceAngle = (segment.value / total) * 2 * Math.PI;
         
-        // Draw slice
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
-        ctx.closePath();
-        ctx.fillStyle = segment.color;
-        ctx.fill();
-        
-        // Draw slice border
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        currentAngle += sliceAngle;
+        if (sliceAngle > 0) {
+            // Draw slice
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+            ctx.closePath();
+            ctx.fillStyle = segment.color;
+            ctx.fill();
+            
+            // Draw slice border
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            currentAngle += sliceAngle;
+        }
     });
     
     // Draw center circle for donut effect
@@ -1916,7 +2101,7 @@ function renderProjectStatusPieChart() {
     ctx.fillStyle = '#ffffff';
     ctx.fill();
     ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.stroke();
     
     // Add center text
@@ -1924,18 +2109,9 @@ function renderProjectStatusPieChart() {
     ctx.font = 'bold 16px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(totalItems.toString(), centerX, centerY - 5);
+    ctx.fillText(centerValue, centerX, centerY - 5);
     ctx.font = '12px system-ui';
-    ctx.fillText('Total Items', centerX, centerY + 10);
-    
-    // Create legend
-    legendContainer.innerHTML = data.map(segment => `
-        <div class="pie-legend-item">
-            <div class="pie-legend-color" style="background-color: ${segment.color};"></div>
-            <span class="pie-legend-label">${segment.label}</span>
-            <span class="pie-legend-value">${segment.value} (${segment.percentage}%)</span>
-        </div>
-    `).join('');
+    ctx.fillText(centerLabel, centerX, centerY + 12);
 }
 
 // Render financial table
