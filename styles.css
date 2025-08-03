@@ -307,6 +307,15 @@ body {
     color: #06b6d4;
 }
 
+.commitment-btn:hover {
+    border-color: #d97706;
+    background: #fef3c7;
+}
+
+.commitment-btn:hover i {
+    color: #d97706;
+}
+
 /* Filter Section */
 .filter-section {
     background: white;
@@ -508,6 +517,10 @@ body {
 
 .item-card.submittal {
     border-left-color: #06b6d4;
+}
+
+.item-card.commitment {
+    border-left-color: #d97706;
 }
 
 /* Modal Styles */

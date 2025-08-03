@@ -320,6 +320,10 @@ function renderItems() {
                 primaryText = `Submittal: ${item.submittalType}`;
                 secondaryText = item.description;
                 break;
+            case 'commitment':
+                primaryText = `${item.subcontractor} - ${item.trade}`;
+                secondaryText = `$${item.contractAmount?.toLocaleString() || 'N/A'} - ${item.agreementStatus || 'pending'}`;
+                break;
         }
         
         const itemCard = document.createElement('div');
@@ -685,18 +689,40 @@ function backupData() {
 
 // Create a formatted CSV backup for easier reading
 function backupDataCSV() {
-    let csvContent = "Type,Project,Description,Due Date,Priority,Status,Ball in Court,Created Date\n";
+    let csvContent = "Type,Project,Description,Due Date,Priority,Status,Ball in Court,Created Date,Amount,Contact\n";
     
     hotTicketItems.forEach(item => {
+        let description = '';
+        let amount = '';
+        let contact = '';
+        
+        // Get type-specific description and fields
+        switch (item.type) {
+            case 'commitment':
+                description = `${item.subcontractor} - ${item.trade} - ${item.workDescription || ''}`.replace(/,/g, ';');
+                amount = item.contractAmount || '';
+                contact = item.contactPerson || '';
+                break;
+            case 'lien':
+            case 'payapp':
+                description = (item.description || item.subject || item.workDescription || '').replace(/,/g, ';');
+                amount = item.amount || '';
+                break;
+            default:
+                description = (item.description || item.subject || item.workDescription || '').replace(/,/g, ';');
+        }
+        
         const row = [
             item.type.toUpperCase(),
             item.project || '',
-            (item.description || item.subject || item.workDescription || '').replace(/,/g, ';'),
+            description,
             item.dueDate || '',
             item.priority || 'normal',
             getItemStatus(item),
             item.ballInCourt || '',
-            item.createdAt || ''
+            item.createdAt || '',
+            amount,
+            contact
         ].join(',');
         csvContent += row + '\n';
     });

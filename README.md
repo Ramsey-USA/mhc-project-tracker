@@ -1,6 +1,6 @@
 # MHC Project Tracker
 
-A simplified construction project management dashboard designed specifically for project engineers managing multiple construction jobs. Track T&M tickets, lien releases, pay applications, RFIs, and submittals across all projects with automated Excel reporting.
+A simplified construction project management dashboard designed specifically for project engineers managing multiple construction jobs. Track T&M tickets, lien releases, pay applications, RFIs, submittals, and subcontractor commitments across all projects with automated Excel reporting.
 
 ## 🎯 Purpose
 
@@ -18,6 +18,7 @@ This tool is designed for project engineers who need to:
 - **Pay Applications**: Amount, approval status, ball in court tracking
 - **RFIs**: Request tracking with architect/owner/MHC responsibility
 - **Submittals**: Review status and approval workflow
+- **Commitments**: Subcontractor agreements, contract amounts, insurance/license tracking
 
 ### Dashboard Features
 - **Color-coded alerts**: Red (24hrs to overdue), visual status indicators
