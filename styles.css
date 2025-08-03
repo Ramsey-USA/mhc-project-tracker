@@ -2,12 +2,166 @@
 
 /* CSS Custom Properties (Root Variables) */
 :root {
+    /* Extended Spacing Scale */
+    --space-0: 0;
+    --space-18: 4.5rem;
+    --space-20: 5rem;
+    --space-24: 6rem;
+    --space-32: 8rem;
+    --space-40: 10rem;
+    --space-48: 12rem;
+    --space-56: 14rem;
+    --space-64: 16rem;
+
+    /* Breakpoints */
+    --breakpoint-xs: 400px;
+    --breakpoint-sm: 640px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1024px;
+    --breakpoint-xl: 1280px;
+    --breakpoint-2xl: 1536px;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-500) 100%);
+    --gradient-accent: linear-gradient(90deg, var(--accent-500), var(--accent-400));
+    --gradient-success: linear-gradient(90deg, var(--success-500), var(--success-100));
+    --gradient-warning: linear-gradient(90deg, var(--warning-500), var(--warning-100));
+    --gradient-danger: linear-gradient(90deg, var(--danger-500), var(--danger-100));
+    --gradient-info: linear-gradient(90deg, var(--info-500), var(--info-100));
+
+    /* Border Widths */
+    --border-thin: 1px;
+    --border-medium: 2px;
+    --border-thick: 4px;
+
+    /* Opacity Scale */
+    --opacity-0: 0;
+    --opacity-25: 0.25;
+    --opacity-50: 0.5;
+    --opacity-75: 0.75;
+    --opacity-100: 1;
+
+    /* Miscellaneous */
+    --duration-fast: 120ms;
+    --duration-base: 200ms;
+    --duration-slow: 350ms;
+    --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --easing-accelerate: cubic-bezier(0.7, 0, 0.84, 0);
+    --easing-decelerate: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Icon Sizes */
+    --icon-xs: 0.75rem;
+    --icon-sm: 1rem;
+    --icon-md: 1.5rem;
+    --icon-lg: 2rem;
+    --icon-xl: 2.5rem;
+    --icon-2xl: 3rem;
+
+    /* Container Widths */
+    --container-xs: 320px;
+    --container-sm: 480px;
+    --container-md: 640px;
+    --container-lg: 960px;
+    --container-xl: 1200px;
+    --container-2xl: 1400px;
+
+    /* Optimized for future scalability */
     /* Brand Colors */
     --primary-600: #1e3a8a;
     --primary-500: #3b82f6;
     --primary-400: #60a5fa;
     --primary-100: #dbeafe;
     --primary-50: #eff6ff;
+    /* PM Color System */
+    --pm1-color: #3b82f6;   /* Jeremy - Blue */
+    --pm2-color: #ec4899;   /* Makayla - Pink */
+    --pm3-color: #6b7280;   /* Ben - Gray */
+    --pm4-color: #f59e42;   /* PM4 - Orange (placeholder) */
+    --pm5-color: #10b981;   /* PM5 - Green (placeholder) */
+/* Enhanced Analytics Metric Cards with PM Color System */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.metric-card {
+    background: var(--white);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    border-left: 6px solid var(--gray-200);
+    position: relative;
+    transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+.metric-card:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-2px);
+}
+/* PM color variants for metric cards */
+.metric-card.pm1 { border-left-color: var(--pm1-color); }
+.metric-card.pm2 { border-left-color: var(--pm2-color); }
+.metric-card.pm3 { border-left-color: var(--pm3-color); }
+.metric-card.pm4 { border-left-color: var(--pm4-color); }
+.metric-card.pm5 { border-left-color: var(--pm5-color); }
+
+.metric-icon {
+    font-size: var(--icon-xl);
+    margin-bottom: var(--space-2);
+    opacity: 0.85;
+}
+.metric-card.pm1 .metric-icon { color: var(--pm1-color); }
+.metric-card.pm2 .metric-icon { color: var(--pm2-color); }
+.metric-card.pm3 .metric-icon { color: var(--pm3-color); }
+.metric-card.pm4 .metric-icon { color: var(--pm4-color); }
+.metric-card.pm5 .metric-icon { color: var(--pm5-color); }
+
+.metric-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--gray-900);
+    margin-bottom: var(--space-2);
+}
+.metric-value {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-extrabold);
+    color: var(--gray-900);
+    margin-bottom: var(--space-2);
+}
+/* Animated Progress Bar for Metrics */
+.metric-progress {
+    width: 100%;
+    height: 12px;
+    background: var(--gray-200);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-bottom: var(--space-2);
+    position: relative;
+}
+.metric-progress-bar {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width var(--transition-slow);
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+.metric-card.pm1 .metric-progress-bar { background: var(--pm1-color); }
+.metric-card.pm2 .metric-progress-bar { background: var(--pm2-color); }
+.metric-card.pm3 .metric-progress-bar { background: var(--pm3-color); }
+.metric-card.pm4 .metric-progress-bar { background: var(--pm4-color); }
+.metric-card.pm5 .metric-progress-bar { background: var(--pm5-color); }
+    /* PM Color System */
+    --pm1-color: #3b82f6;   /* Jeremy - Blue */
+    --pm2-color: #ec4899;   /* Makayla - Pink */
+    --pm3-color: #6b7280;   /* Ben - Gray */
+    --pm4-color: #f59e42;   /* PM4 - Orange (placeholder) */
+    --pm5-color: #10b981;   /* PM5 - Green (placeholder) */
     
     --accent-500: #fbbf24;
     --accent-400: #fcd34d;
@@ -1171,15 +1325,22 @@ a:hover {
 }
 
 .project-card.makayla {
-    border-left-color: var(--primary-500);
+    border-left-color: var(--pm2-color);
 }
 
 .project-card.ben {
-    border-left-color: var(--success-500);
+    border-left-color: var(--pm3-color);
 }
 
 .project-card.jeremy {
-    border-left-color: var(--warning-500);
+    border-left-color: var(--pm1-color);
+/* New PM placeholder classes */
+.project-card.pm4 {
+    border-left-color: var(--pm4-color);
+}
+.project-card.pm5 {
+    border-left-color: var(--pm5-color);
+}
 }
 
 .project-header {

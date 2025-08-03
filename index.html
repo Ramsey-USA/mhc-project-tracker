@@ -164,7 +164,11 @@
 
             <!-- Key Metrics Grid -->
             <div class="metrics-grid">
-                <div class="metric-card financial">
+                <div class="metric-card pm1 financial">
+                    <div class="metric-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="metric-title">Financial</div>
+                    <div class="metric-value" id="financial-value">$0</div>
+                    <div class="metric-progress"><div class="metric-progress-bar" id="financial-progress" style="width: 0%"></div></div>
                     <div class="metric-icon">
                         <i class="fas fa-dollar-sign"></i>
                     </div>
@@ -175,7 +179,11 @@
                     </div>
                 </div>
 
-                <div class="metric-card progress">
+                <div class="metric-card pm2 progress">
+                    <div class="metric-icon"><i class="fas fa-tasks"></i></div>
+                    <div class="metric-title">Progress</div>
+                    <div class="metric-value" id="progress-value">0%</div>
+                    <div class="metric-progress"><div class="metric-progress-bar" id="progress-bar" style="width: 0%"></div></div>
                     <div class="metric-icon">
                         <i class="fas fa-tasks"></i>
                     </div>
@@ -186,7 +194,11 @@
                     </div>
                 </div>
 
-                <div class="metric-card performance">
+                <div class="metric-card pm3 performance">
+                    <div class="metric-icon"><i class="fas fa-chart-bar"></i></div>
+                    <div class="metric-title">Performance</div>
+                    <div class="metric-value" id="performance-value">0</div>
+                    <div class="metric-progress"><div class="metric-progress-bar" id="performance-bar" style="width: 0%"></div></div>
                     <div class="metric-icon">
                         <i class="fas fa-clock"></i>
                     </div>
@@ -197,7 +209,11 @@
                     </div>
                 </div>
 
-                <div class="metric-card efficiency">
+                <div class="metric-card pm4 efficiency">
+                    <div class="metric-icon"><i class="fas fa-bolt"></i></div>
+                    <div class="metric-title">Efficiency</div>
+                    <div class="metric-value" id="efficiency-value">0</div>
+                    <div class="metric-progress"><div class="metric-progress-bar" id="efficiency-bar" style="width: 0%"></div></div>
                     <div class="metric-icon">
                         <i class="fas fa-chart-pie"></i>
                     </div>
@@ -222,29 +238,6 @@
                     <h3>PM Performance Comparison</h3>
                     <div class="performance-chart" id="performance-chart">
                         <!-- Performance comparison will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pie Charts Section -->
-            <div class="pie-charts-section">
-                <div class="chart-container">
-                    <h3>Project Valuation by PM</h3>
-                    <div class="pie-chart-container">
-                        <canvas id="valuation-pie-chart" width="300" height="300"></canvas>
-                        <div class="pie-chart-legend" id="valuation-legend">
-                            <!-- Legend will be populated here -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <h3>Project Completion by PM</h3>
-                    <div class="pie-chart-container">
-                        <canvas id="completion-pie-chart" width="300" height="300"></canvas>
-                        <div class="pie-chart-legend" id="completion-legend">
-                            <!-- Legend will be populated here -->
-                        </div>
                     </div>
                 </div>
             </div>
