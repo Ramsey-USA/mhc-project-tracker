@@ -18,7 +18,7 @@
                 <span class="subtitle">Hot Ticket Items Dashboard</span>
             </div>
             <div class="header-actions">
-                <button class="btn btn-export" onclick="exportTeamMeeting( )">
+                <button class="btn btn-export" onclick="exportTeamMeeting()">
                     <i class="fas fa-users"></i> Monday Team Report
                 </button>
                 <button class="btn btn-export" onclick="exportBossReport()">
@@ -228,6 +228,337 @@
 
     <!-- Similar modal forms for Lien Release, Pay App, RFI, and Submittal -->
     <!-- (Forms follow same pattern with different fields) -->
+
+    <!-- Lien Release Modal -->
+    <div id="lien-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-contract"></i> Add Lien Release</h3>
+                <span class="close" onclick="closeModal('lien-modal')">&times;</span>
+            </div>
+            <form id="lien-form" onsubmit="addItem(event, 'lien')">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Project:</label>
+                        <select name="project" required>
+                            <option value="">Select Project</option>
+                            <option value="makayla-job1">Makayla - Office Complex</option>
+                            <option value="makayla-job2">Makayla - Retail Center</option>
+                            <option value="ben-job1">Ben - Warehouse Expansion</option>
+                            <option value="ben-job2">Ben - Manufacturing Plant</option>
+                            <option value="ben-job3">Ben - Distribution Center</option>
+                            <option value="jeremy-darigold">Jeremy - Darigold Plant</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Vendor/Subcontractor:</label>
+                        <input type="text" name="vendor" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Release Type:</label>
+                        <select name="releaseType" required>
+                            <option value="">Select Type</option>
+                            <option value="conditional">Conditional</option>
+                            <option value="unconditional">Unconditional</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount:</label>
+                        <input type="number" name="amount" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Due Date:</label>
+                        <input type="date" name="dueDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Expiration Date:</label>
+                        <input type="date" name="expirationDate">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Priority:</label>
+                        <select name="priority">
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ball in Court:</label>
+                        <select name="ballInCourt">
+                            <option value="vendor">Vendor</option>
+                            <option value="mhc">MHC</option>
+                            <option value="client">Client</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes:</label>
+                    <textarea name="notes" rows="2"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('lien-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Lien Release</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pay App Modal -->
+    <div id="payapp-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-money-check"></i> Add Pay Application</h3>
+                <span class="close" onclick="closeModal('payapp-modal')">&times;</span>
+            </div>
+            <form id="payapp-form" onsubmit="addItem(event, 'payapp')">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Project:</label>
+                        <select name="project" required>
+                            <option value="">Select Project</option>
+                            <option value="makayla-job1">Makayla - Office Complex</option>
+                            <option value="makayla-job2">Makayla - Retail Center</option>
+                            <option value="ben-job1">Ben - Warehouse Expansion</option>
+                            <option value="ben-job2">Ben - Manufacturing Plant</option>
+                            <option value="ben-job3">Ben - Distribution Center</option>
+                            <option value="jeremy-darigold">Jeremy - Darigold Plant</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pay App Number:</label>
+                        <input type="text" name="payAppNumber" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount:</label>
+                        <input type="number" name="amount" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Period Ending:</label>
+                        <input type="date" name="periodEnding" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Due Date:</label>
+                        <input type="date" name="dueDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Approval Status:</label>
+                        <select name="approvalStatus">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Priority:</label>
+                        <select name="priority">
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ball in Court:</label>
+                        <select name="ballInCourt">
+                            <option value="client">Client</option>
+                            <option value="mhc">MHC</option>
+                            <option value="architect">Architect</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes:</label>
+                    <textarea name="notes" rows="2"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('payapp-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Pay Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RFI Modal -->
+    <div id="rfi-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-question-circle"></i> Add RFI</h3>
+                <span class="close" onclick="closeModal('rfi-modal')">&times;</span>
+            </div>
+            <form id="rfi-form" onsubmit="addItem(event, 'rfi')">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Project:</label>
+                        <select name="project" required>
+                            <option value="">Select Project</option>
+                            <option value="makayla-job1">Makayla - Office Complex</option>
+                            <option value="makayla-job2">Makayla - Retail Center</option>
+                            <option value="ben-job1">Ben - Warehouse Expansion</option>
+                            <option value="ben-job2">Ben - Manufacturing Plant</option>
+                            <option value="ben-job3">Ben - Distribution Center</option>
+                            <option value="jeremy-darigold">Jeremy - Darigold Plant</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>RFI Number:</label>
+                        <input type="text" name="rfiNumber" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Subject:</label>
+                    <input type="text" name="subject" required>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea name="description" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Due Date:</label>
+                        <input type="date" name="dueDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority:</label>
+                        <select name="priority">
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ball in Court:</label>
+                        <select name="ballInCourt">
+                            <option value="architect">Architect</option>
+                            <option value="owner">Owner</option>
+                            <option value="mhc">MHC</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status:</label>
+                        <select name="rfiStatus">
+                            <option value="submitted">Submitted</option>
+                            <option value="in-review">In Review</option>
+                            <option value="answered">Answered</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes:</label>
+                    <textarea name="notes" rows="2"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('rfi-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add RFI</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Submittal Modal -->
+    <div id="submittal-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-upload"></i> Add Submittal</h3>
+                <span class="close" onclick="closeModal('submittal-modal')">&times;</span>
+            </div>
+            <form id="submittal-form" onsubmit="addItem(event, 'submittal')">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Project:</label>
+                        <select name="project" required>
+                            <option value="">Select Project</option>
+                            <option value="makayla-job1">Makayla - Office Complex</option>
+                            <option value="makayla-job2">Makayla - Retail Center</option>
+                            <option value="ben-job1">Ben - Warehouse Expansion</option>
+                            <option value="ben-job2">Ben - Manufacturing Plant</option>
+                            <option value="ben-job3">Ben - Distribution Center</option>
+                            <option value="jeremy-darigold">Jeremy - Darigold Plant</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Submittal Type:</label>
+                        <select name="submittalType" required>
+                            <option value="">Select Type</option>
+                            <option value="shop-drawings">Shop Drawings</option>
+                            <option value="product-data">Product Data</option>
+                            <option value="samples">Samples</option>
+                            <option value="mix-design">Mix Design</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea name="description" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Vendor/Supplier:</label>
+                        <input type="text" name="vendor" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Submittal Number:</label>
+                        <input type="text" name="submittalNumber">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Due Date:</label>
+                        <input type="date" name="dueDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Review Status:</label>
+                        <select name="reviewStatus">
+                            <option value="pending">Pending Review</option>
+                            <option value="approved">Approved</option>
+                            <option value="approved-noted">Approved as Noted</option>
+                            <option value="revise-resubmit">Revise & Resubmit</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Priority:</label>
+                        <select name="priority">
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ball in Court:</label>
+                        <select name="ballInCourt">
+                            <option value="architect">Architect</option>
+                            <option value="mhc">MHC</option>
+                            <option value="vendor">Vendor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes:</label>
+                    <textarea name="notes" rows="2"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('submittal-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Submittal</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Contact Log Modal -->
     <div id="contact-modal" class="modal">

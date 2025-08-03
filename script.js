@@ -256,24 +256,138 @@ function renderProjects() {
     });
 }
 
+// Render items list
+function renderItems() {
+    const itemsContainer = document.getElementById('items-container');
+    if (!itemsContainer) return;
+    
+    const filteredItems = filterItems();
+    itemsContainer.innerHTML = '';
+    
+    if (filteredItems.length === 0) {
+        itemsContainer.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: #6b7280;">
+                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No items found matching current filters.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    filteredItems.forEach(item => {
+        const project = projects.find(p => p.id === item.project);
+        const status = getItemStatus(item);
+        const daysUntil = getDaysUntilDue(item.dueDate);
+        
+        let daysText = '';
+        if (daysUntil < 0) {
+            daysText = `${Math.abs(daysUntil)} days overdue`;
+        } else if (daysUntil === 0) {
+            daysText = 'Due today';
+        } else if (daysUntil === 1) {
+            daysText = 'Due tomorrow';
+        } else {
+            daysText = `Due in ${daysUntil} days`;
+        }
+        
+        let primaryText = '';
+        let secondaryText = '';
+        
+        switch (item.type) {
+            case 'tm':
+                primaryText = `${item.employee} - ${item.hours} hours`;
+                secondaryText = item.description;
+                break;
+            case 'lien':
+                primaryText = item.vendor;
+                secondaryText = `${item.releaseType} release - $${item.amount?.toLocaleString() || 'N/A'}`;
+                break;
+            case 'payapp':
+                primaryText = `Pay App #${item.payAppNumber}`;
+                secondaryText = `$${item.amount?.toLocaleString() || 'N/A'}`;
+                break;
+            case 'rfi':
+                primaryText = `RFI #${item.rfiNumber || 'N/A'}`;
+                secondaryText = item.subject;
+                break;
+            case 'submittal':
+                primaryText = `Submittal: ${item.submittalType}`;
+                secondaryText = item.description;
+                break;
+        }
+        
+        const itemCard = document.createElement('div');
+        itemCard.className = `item-card ${item.type} ${status}`;
+        itemCard.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div>
+                    <div style="font-weight: 700; color: #1f2937; margin-bottom: 0.25rem;">
+                        ${primaryText}
+                    </div>
+                    <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        ${secondaryText || ''}
+                    </div>
+                    <div style="color: #374151; font-size: 0.85rem;">
+                        <i class="fas fa-building"></i> ${project?.name || 'Unknown Project'}
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.25rem; 
+                        color: ${status === 'overdue' ? '#dc2626' : status === 'urgent' ? '#f59e0b' : '#6b7280'};">
+                        ${daysText}
+                    </div>
+                    <div style="font-size: 0.75rem; color: #6b7280;">
+                        Priority: ${item.priority || 'normal'}
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; 
+                        padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                <div style="font-size: 0.8rem; color: #6b7280;">
+                    <i class="fas fa-user"></i> Ball in court: ${item.ballInCourt || 'N/A'}
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button onclick="editItem('${item.id}')" class="btn" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button onclick="markComplete('${item.id}')" class="btn btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
+                        <i class="fas fa-check"></i> Complete
+                    </button>
+                </div>
+            </div>
+            ${item.notes ? `<div style="margin-top: 0.5rem; padding: 0.75rem; background: #f9fafb; border-radius: 6px; font-size: 0.85rem; color: #374151;"><strong>Notes:</strong> ${item.notes}</div>` : ''}
+        `;
+        
+        itemsContainer.appendChild(itemCard);
+    });
+}
+
 // Modal and Form Functions
 function showAddModal(type) {
     const modal = document.getElementById(type + '-modal');
+    
+    if (!modal) {
+        alert('Modal not found for type: ' + type);
+        return;
+    }
+    
     modal.style.display = 'block';
     
     // Reset form
     const form = modal.querySelector('form');
-    form.reset();
-    
-    // Set default dates
-    const today = new Date().toISOString().split('T')[0];
-    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    
-    const dateInputs = form.querySelectorAll('input[name="date"], input[name="initiatedDate"]');
-    dateInputs.forEach(input => input.value = today);
-    
-    const dueDateInputs = form.querySelectorAll('input[name="dueDate"]');
-    dueDateInputs.forEach(input => input.value = nextWeek);
+    if (form) {
+        form.reset();
+        
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        const dateInputs = form.querySelectorAll('input[name="date"], input[name="initiatedDate"]');
+        dateInputs.forEach(input => input.value = today);
+        
+        const dueDateInputs = form.querySelectorAll('input[name="dueDate"]');
+        dueDateInputs.forEach(input => input.value = nextWeek);
+    }
 }
 
 function closeModal(modalId) {
@@ -317,6 +431,105 @@ function getTypeLabel(type) {
         'submittal': 'Submittal'
     };
     return labels[type] || type;
+}
+
+// Edit item function
+function editItem(itemId) {
+    const item = hotTicketItems.find(i => i.id === itemId);
+    if (!item) return;
+    
+    showAddModal(item.type);
+    
+    // Populate form with existing data
+    const modal = document.getElementById(item.type + '-modal');
+    const form = modal.querySelector('form');
+    
+    Object.keys(item).forEach(key => {
+        const input = form.querySelector(`[name="${key}"]`);
+        if (input) {
+            input.value = item[key] || '';
+        }
+    });
+    
+    // Change form submission to update instead of add
+    form.onsubmit = function(event) {
+        event.preventDefault();
+        updateItem(itemId, event.target);
+    };
+}
+
+// Update existing item
+function updateItem(itemId, form) {
+    const formData = new FormData(form);
+    const itemIndex = hotTicketItems.findIndex(i => i.id === itemId);
+    
+    if (itemIndex === -1) return;
+    
+    // Update item with form data
+    for (let [key, value] of formData.entries()) {
+        hotTicketItems[itemIndex][key] = value;
+    }
+    
+    hotTicketItems[itemIndex].lastModified = new Date().toISOString();
+    
+    saveData();
+    renderDashboard();
+    closeModal(form.closest('.modal').id);
+    showNotification('Item updated successfully!');
+}
+
+// Mark item as complete
+function markComplete(itemId) {
+    const itemIndex = hotTicketItems.findIndex(i => i.id === itemId);
+    if (itemIndex === -1) return;
+    
+    hotTicketItems[itemIndex].status = 'completed';
+    hotTicketItems[itemIndex].completedDate = new Date().toISOString().split('T')[0];
+    
+    saveData();
+    renderDashboard();
+    showNotification('Item marked as complete!');
+}
+
+// Log contact function
+function logContact(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const itemId = document.getElementById('contact-item-id').value;
+    
+    const contactEntry = {
+        id: generateId(),
+        itemId: itemId,
+        method: formData.get('method'),
+        date: formData.get('date'),
+        notes: formData.get('notes'),
+        timestamp: new Date().toISOString()
+    };
+    
+    contactLog.push(contactEntry);
+    
+    // Update item's last contact date
+    const itemIndex = hotTicketItems.findIndex(i => i.id === itemId);
+    if (itemIndex !== -1) {
+        hotTicketItems[itemIndex].lastContact = contactEntry.date;
+    }
+    
+    saveData();
+    renderDashboard();
+    closeModal('contact-modal');
+    showNotification('Contact logged successfully!');
+}
+
+// Show contact modal for specific item
+function showContactModal(itemId) {
+    document.getElementById('contact-item-id').value = itemId;
+    document.getElementById('contact-modal').style.display = 'block';
+    
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('#contact-modal input[name="date"]').value = today;
 }
 
 // Filter items

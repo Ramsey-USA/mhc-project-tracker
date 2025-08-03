@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Modal Test</title>
+</head>
+<body>
+    <h1>Testing Modal Functions</h1>
+    <button onclick="testModal('tm')">Test T&M Modal</button>
+    <button onclick="testModal('lien')">Test Lien Modal</button>
+    <button onclick="testModal('payapp')">Test PayApp Modal</button>
+    <button onclick="testModal('rfi')">Test RFI Modal</button>
+    <button onclick="testModal('submittal')">Test Submittal Modal</button>
+    
+    <div id="results"></div>
+    
+    <script src="script.js"></script>
+    <script>
+        function testModal(type) {
+            const modal = document.getElementById(type + '-modal');
+            if (modal) {
+                document.getElementById('results').innerHTML += `<p>✅ ${type} modal exists</p>`;
+                try {
+                    showAddModal(type);
+                    document.getElementById('results').innerHTML += `<p>✅ ${type} modal function works</p>`;
+                    closeModal(type + '-modal');
+                } catch (error) {
+                    document.getElementById('results').innerHTML += `<p>❌ ${type} modal error: ${error.message}</p>`;
+                }
+            } else {
+                document.getElementById('results').innerHTML += `<p>❌ ${type} modal not found</p>`;
+            }
+        }
+        
+        // Test all modals on load
+        window.onload = function() {
+            ['tm', 'lien', 'payapp', 'rfi', 'submittal'].forEach(testModal);
+        }
+    </script>
+</body>
+</html>
