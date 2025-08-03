@@ -5,7 +5,13 @@ let hotTicketItems = [];
 let projects = [];
 let contactLog = [];
 
-// Initialize the application
+// Initialize the app// Save data to localStorage
+function saveData() {
+    localStorage.setItem('mhc_hotTicketItems', JSON.stringify(hotTicketItems));
+    localStorage.setItem('mhc_projects', JSON.stringify(projects));
+    localStorage.setItem('mhc_contactLog', JSON.stringify(contactLog));
+    localStorage.setItem('mhc_lastSaved', new Date().toLocaleString());
+}on
 document.addEventListener('DOMContentLoaded', function() {
     initializeData();
     loadData();
@@ -661,7 +667,9 @@ function backupData() {
         hotTicketItems: hotTicketItems,
         projects: projects,
         contactLog: contactLog,
-        exportDate: new Date().toISOString()
+        exportDate: new Date().toISOString(),
+        totalItems: hotTicketItems.length,
+        version: '1.0'
     };
     
     const dataStr = JSON.stringify(backup, null, 2);
@@ -672,7 +680,55 @@ function backupData() {
     link.download = `MHC_Backup_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     
-    showNotification('Data backup downloaded successfully!');
+    showNotification('Data backup downloaded successfully! Save this file to your PC or company server.');
+}
+
+// Create a formatted CSV backup for easier reading
+function backupDataCSV() {
+    let csvContent = "Type,Project,Description,Due Date,Priority,Status,Ball in Court,Created Date\n";
+    
+    hotTicketItems.forEach(item => {
+        const row = [
+            item.type.toUpperCase(),
+            item.project || '',
+            (item.description || item.subject || item.workDescription || '').replace(/,/g, ';'),
+            item.dueDate || '',
+            item.priority || 'normal',
+            getItemStatus(item),
+            item.ballInCourt || '',
+            item.createdAt || ''
+        ].join(',');
+        csvContent += row + '\n';
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `MHC_Data_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    
+    showNotification('CSV backup downloaded! This file can be opened in Excel.');
+}
+
+// Show data storage info
+function showDataInfo() {
+    const itemCount = hotTicketItems.length;
+    const projectCount = projects.length;
+    const contactCount = contactLog.length;
+    const lastSaved = localStorage.getItem('mhc_lastSaved') || 'Never';
+    
+    const message = `
+        Data Status:
+        • ${itemCount} hot ticket items
+        • ${projectCount} projects  
+        • ${contactCount} contact logs
+        • Last saved: ${lastSaved}
+        • Storage: Browser localStorage
+        
+        Backup regularly to save to PC & company server!
+    `;
+    
+    alert(message);
 }
 
 function restoreData(event) {

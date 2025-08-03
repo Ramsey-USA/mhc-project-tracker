@@ -120,12 +120,21 @@ body {
 }
 
 .btn-restore {
-    background: #06b6d4;
-    color: white;
+    background: #e67e22;
+    border: 1px solid #d35400;
 }
 
 .btn-restore:hover {
-    background: #0891b2;
+    background: #d35400;
+}
+
+.btn-info {
+    background: #3498db;
+    border: 1px solid #2980b9;
+}
+
+.btn-info:hover {
+    background: #2980b9;
 }
 
 /* Stats Bar */
