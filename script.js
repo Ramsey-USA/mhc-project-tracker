@@ -288,7 +288,8 @@ function saveData() {
     localStorage.setItem('mhc_projects', JSON.stringify(projects));
     localStorage.setItem('mhc_contactLog', JSON.stringify(contactLog));
     localStorage.setItem('mhc_lastSaved', new Date().toLocaleString());
-}on
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeData();
     loadData();
@@ -483,6 +484,11 @@ function saveData() {
     localStorage.setItem('mhc_hot_ticket_items', JSON.stringify(hotTicketItems));
     localStorage.setItem('mhc_projects', JSON.stringify(projects));
     localStorage.setItem('mhc_contact_log', JSON.stringify(contactLog));
+    
+    // Refresh analytics when data changes
+    setTimeout(() => {
+        refreshAnalytics();
+    }, 100);
 }
 
 // Calculate days until due date
@@ -506,6 +512,8 @@ function getItemStatus(item) {
 
 // Update dashboard statistics
 function updateStats() {
+    // Statistics are now handled by the analytics dashboard
+    // This function is kept for backward compatibility but the old stats bar has been removed
     const urgentCount = hotTicketItems.filter(item => getItemStatus(item) === 'urgent').length;
     const overdueCount = hotTicketItems.filter(item => getItemStatus(item) === 'overdue').length;
     const totalCount = hotTicketItems.filter(item => item.status !== 'completed').length;
@@ -514,10 +522,9 @@ function updateStats() {
         return item.status === 'completed' && item.completedDate === today;
     }).length;
     
-    document.getElementById('urgent-count').textContent = urgentCount;
-    document.getElementById('overdue-count').textContent = overdueCount;
-    document.getElementById('total-count').textContent = totalCount;
-    document.getElementById('completed-count').textContent = completedToday;
+    // No longer updating DOM elements since stats bar was removed
+    // Statistics are now displayed in the analytics dashboard
+    console.log('Stats:', { urgentCount, overdueCount, totalCount, completedToday });
 }
 
 // Render the main dashboard
@@ -1418,6 +1425,9 @@ function openProjectEditor(projectId) {
         return;
     }
     
+    // Set modal title for editing
+    document.getElementById('project-modal-title').textContent = 'Edit Project';
+    
     // Populate form fields
     document.getElementById('edit-project-id').value = project.id;
     document.getElementById('edit-project-name').value = project.name || '';
@@ -1429,6 +1439,12 @@ function openProjectEditor(projectId) {
     document.getElementById('edit-project-description').value = project.description || '';
     document.getElementById('edit-project-notes').value = project.notes || '';
     
+    // Populate new financial/progress fields
+    document.getElementById('edit-project-budget').value = project.budget || '';
+    document.getElementById('edit-project-spent').value = project.spent || '';
+    document.getElementById('edit-project-progress').value = project.progress || 0;
+    document.getElementById('edit-project-phase').value = project.phase || '';
+    
     // Show modal
     document.getElementById('project-edit-modal').style.display = 'block';
 }
@@ -1439,26 +1455,54 @@ function saveProject(event) {
     const formData = new FormData(event.target);
     const projectId = formData.get('projectId');
     
-    const updatedProject = {
-        id: projectId,
-        name: formData.get('name'),
-        pm: formData.get('pm'),
-        status: formData.get('status'),
-        startDate: formData.get('startDate'),
-        endDate: formData.get('endDate'),
-        description: formData.get('description'),
-        notes: formData.get('notes')
-    };
-    
-    // Find and update the project
-    const projectIndex = projects.findIndex(p => p.id === projectId);
-    if (projectIndex === -1) {
-        showNotification('Project not found', 'error');
-        return;
+    if (projectId) {
+        // Editing existing project
+        const updatedProject = {
+            id: projectId,
+            name: formData.get('name'),
+            pm: formData.get('pm'),
+            status: formData.get('status'),
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            description: formData.get('description'),
+            notes: formData.get('notes'),
+            budget: parseFloat(formData.get('budget')) || 0,
+            spent: parseFloat(formData.get('spent')) || 0,
+            progress: parseInt(formData.get('progress')) || 0,
+            phase: formData.get('phase') || 'Planning'
+        };
+        
+        // Find and update the project
+        const projectIndex = projects.findIndex(p => p.id === projectId);
+        if (projectIndex === -1) {
+            showNotification('Project not found', 'error');
+            return;
+        }
+        
+        // Preserve the original project data and merge with updates
+        projects[projectIndex] = { ...projects[projectIndex], ...updatedProject };
+        
+        showNotification('Project updated successfully!', 'success');
+    } else {
+        // Creating new project
+        const newProject = {
+            id: `project-${Date.now()}`,
+            name: formData.get('name'),
+            pm: formData.get('pm'),
+            status: formData.get('status') || 'active',
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            description: formData.get('description'),
+            notes: formData.get('notes'),
+            budget: parseFloat(formData.get('budget')) || 0,
+            spent: parseFloat(formData.get('spent')) || 0,
+            progress: parseInt(formData.get('progress')) || 0,
+            phase: formData.get('phase') || 'Planning'
+        };
+        
+        projects.push(newProject);
+        showNotification('New project created successfully!', 'success');
     }
-    
-    // Preserve the original ID and merge with updates
-    projects[projectIndex] = { ...projects[projectIndex], ...updatedProject };
     
     // Save to localStorage
     saveData();
@@ -1469,9 +1513,38 @@ function saveProject(event) {
     // Re-render the dashboard
     renderDashboard();
     
-    // Close modal and show success message
+    // Close modal
     closeModal('project-edit-modal');
-    showNotification('Project updated successfully!', 'success');
+    
+    // Refresh analytics to show the new/updated project
+    setTimeout(() => {
+        refreshAnalytics();
+    }, 100);
+}
+
+// Add new project function
+function addNewProject() {
+    // Clear the form
+    document.getElementById('project-edit-form').reset();
+    document.getElementById('edit-project-id').value = '';
+    document.getElementById('edit-project-key').value = '';
+    
+    // Set modal title for new project
+    document.getElementById('project-modal-title').textContent = 'Add New Project';
+    
+    // Set default values
+    if (document.getElementById('edit-project-status')) {
+        document.getElementById('edit-project-status').value = 'active';
+    }
+    if (document.getElementById('edit-project-progress')) {
+        document.getElementById('edit-project-progress').value = '0';
+    }
+    if (document.getElementById('edit-project-phase')) {
+        document.getElementById('edit-project-phase').value = 'Planning';
+    }
+    
+    // Show modal
+    showModal('project-edit-modal');
 }
 
 function updateProjectDropdowns() {
@@ -1509,29 +1582,89 @@ let analyticsData = {
 
 // Initialize analytics
 function initializeAnalytics() {
-    loadNotificationSettings();
-    updateAnalytics();
-    updateNotifications();
+    console.log('Starting analytics initialization...');
     
-    // Check for notifications every 5 minutes
-    setInterval(updateNotifications, 5 * 60 * 1000);
+    // Check if analytics section exists
+    const analyticsSection = document.querySelector('.analytics-section');
+    if (!analyticsSection) {
+        console.error('Analytics section not found in DOM');
+        return;
+    }
+    
+    loadNotificationSettings();
+    
+    console.log('Projects available:', projects.length);
+    console.log('Hot ticket items available:', hotTicketItems.length);
+    
+    try {
+        updateAnalytics();
+        updateNotifications();
+        
+        // Check for notifications every 5 minutes
+        setInterval(updateNotifications, 5 * 60 * 1000);
+        
+        console.log('Analytics initialization complete');
+    } catch (error) {
+        console.error('Error during analytics initialization:', error);
+    }
 }
 
 // Update analytics dashboard
 function updateAnalytics() {
+    console.log('Updating analytics...');
     const period = parseInt(document.getElementById('analytics-period')?.value || 30);
     analyticsData.period = period;
     
+    console.log('Calculating metrics...');
     calculateMetrics();
+    
+    console.log('Rendering metrics...');
     renderMetrics();
+    
+    console.log('Rendering progress charts...');
     renderProgressCharts();
+    
+    console.log('Rendering performance chart...');
     renderPerformanceChart();
+    
+    console.log('Rendering financial table...');
     renderFinancialTable();
+    
+    console.log('Rendering trends table...');
     renderTrendsTable();
+    
+    console.log('Analytics updated successfully');
+}
+
+// Refresh analytics (can be called when data changes)
+function refreshAnalytics() {
+    if (document.querySelector('.analytics-section')) {
+        updateAnalytics();
+    }
 }
 
 // Calculate key metrics
 function calculateMetrics() {
+    console.log('Calculating metrics...');
+    
+    // Ensure we have projects data loaded
+    if (!projects || projects.length === 0) {
+        console.warn('No projects data available for analytics');
+        analyticsData.metrics = {
+            totalBudget: 0,
+            totalSpent: 0,
+            avgProgress: 0,
+            avgCompletionTime: 0,
+            efficiencyScore: 100, // Default to 100% when no data
+            progressTrend: 0,
+            completionTrend: 0
+        };
+        console.log('Default metrics set:', analyticsData.metrics);
+        return;
+    }
+    
+    console.log('Projects for calculation:', projects);
+    
     const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
     const totalSpent = projects.reduce((sum, p) => sum + (p.spent || 0), 0);
     const avgProgress = projects.reduce((sum, p) => sum + (p.progress || 0), 0) / projects.length;
@@ -1552,23 +1685,58 @@ function calculateMetrics() {
         progressTrend: calculateProgressTrend(),
         completionTrend: calculateCompletionTrend()
     };
+    
+    console.log('Analytics metrics calculated:', analyticsData.metrics);
 }
 
 // Render metrics cards
 function renderMetrics() {
+    console.log('Rendering metrics...');
+    
+    if (!analyticsData || !analyticsData.metrics) {
+        console.error('Analytics data not available');
+        return;
+    }
+    
     const metrics = analyticsData.metrics;
+    console.log('Metrics to render:', metrics);
     
-    document.getElementById('total-budget').textContent = `$${metrics.totalBudget.toLocaleString()}`;
-    document.getElementById('budget-spent').textContent = `$${metrics.totalSpent.toLocaleString()} spent (${Math.round((metrics.totalSpent / metrics.totalBudget) * 100)}%)`;
-    
-    document.getElementById('avg-progress').textContent = `${Math.round(metrics.avgProgress)}%`;
-    document.getElementById('progress-trend').textContent = `${metrics.progressTrend > 0 ? '+' : ''}${metrics.progressTrend}% this month`;
-    
-    document.getElementById('avg-completion').textContent = metrics.avgCompletionTime;
-    document.getElementById('completion-trend').textContent = `${hotTicketItems.filter(i => i.status === 'completed').length} items completed`;
-    
-    document.getElementById('efficiency-score').textContent = `${Math.round(metrics.efficiencyScore)}%`;
-    document.getElementById('efficiency-trend').textContent = metrics.efficiencyScore >= 75 ? 'Above target' : 'Below target';
+    try {
+        const totalBudgetEl = document.getElementById('total-budget');
+        const budgetSpentEl = document.getElementById('budget-spent');
+        const avgProgressEl = document.getElementById('avg-progress');
+        const progressTrendEl = document.getElementById('progress-trend');
+        const avgCompletionEl = document.getElementById('avg-completion');
+        const completionTrendEl = document.getElementById('completion-trend');
+        const efficiencyScoreEl = document.getElementById('efficiency-score');
+        const efficiencyTrendEl = document.getElementById('efficiency-trend');
+        
+        console.log('DOM elements found:', {
+            totalBudgetEl: !!totalBudgetEl,
+            budgetSpentEl: !!budgetSpentEl,
+            avgProgressEl: !!avgProgressEl,
+            progressTrendEl: !!progressTrendEl
+        });
+        
+        if (totalBudgetEl) totalBudgetEl.textContent = `$${metrics.totalBudget.toLocaleString()}`;
+        if (budgetSpentEl) {
+            const spentPercent = metrics.totalBudget > 0 ? Math.round((metrics.totalSpent / metrics.totalBudget) * 100) : 0;
+            budgetSpentEl.textContent = `$${metrics.totalSpent.toLocaleString()} spent (${spentPercent}%)`;
+        }
+        
+        if (avgProgressEl) avgProgressEl.textContent = `${Math.round(metrics.avgProgress)}%`;
+        if (progressTrendEl) progressTrendEl.textContent = `${metrics.progressTrend > 0 ? '+' : ''}${metrics.progressTrend}% this month`;
+        
+        if (avgCompletionEl) avgCompletionEl.textContent = metrics.avgCompletionTime;
+        if (completionTrendEl) completionTrendEl.textContent = `${hotTicketItems.filter(i => i.status === 'completed').length} items completed`;
+        
+        if (efficiencyScoreEl) efficiencyScoreEl.textContent = `${Math.round(metrics.efficiencyScore)}%`;
+        if (efficiencyTrendEl) efficiencyTrendEl.textContent = metrics.efficiencyScore >= 75 ? 'Above target' : 'Below target';
+        
+        console.log('Metrics rendered successfully');
+    } catch (error) {
+        console.error('Error rendering metrics:', error);
+    }
 }
 
 // Render progress charts
@@ -1576,13 +1744,27 @@ function renderProgressCharts() {
     const container = document.getElementById('progress-charts');
     if (!container) return;
     
+    if (!projects || projects.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                <i class="fas fa-building" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gray-400);"></i>
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">No Projects Yet</div>
+                <div style="font-size: var(--text-sm);">Click on the "Active Projects" section below to add your first project.</div>
+            </div>
+        `;
+        return;
+    }
+    
     container.innerHTML = projects.map(project => {
         const progressClass = project.progress >= 80 ? 'success' : project.progress >= 50 ? '' : 'warning';
+        const budgetUsed = project.spent && project.budget ? ((project.spent / project.budget) * 100).toFixed(1) : 0;
         return `
             <div class="project-progress-item">
                 <div class="project-progress-info">
                     <div class="project-progress-name">${project.name}</div>
-                    <div class="project-progress-details">${project.phase || 'In Progress'} • ${project.pm}</div>
+                    <div class="project-progress-details">
+                        ${project.phase || 'In Progress'} • ${project.pm} • ${budgetUsed}% budget used
+                    </div>
                 </div>
                 <div class="progress-bar-container">
                     <div class="progress-bar ${progressClass}" style="width: ${project.progress}%"></div>
@@ -1600,13 +1782,28 @@ function renderPerformanceChart() {
     
     const pmStats = calculatePMStats();
     
-    container.innerHTML = Object.entries(pmStats).map(([pm, stats]) => `
+    if (Object.keys(pmStats).length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gray-400);"></i>
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">No PM Performance Data</div>
+                <div style="font-size: var(--text-sm);">Performance metrics will appear once you add projects with assigned project managers.</div>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = Object.entries(pmStats).map(([pm, stats]) => {
+        const budgetEfficiency = stats.totalBudget > 0 ? ((stats.totalBudget - stats.totalSpent) / stats.totalBudget * 100) : 0;
+        const efficiencyColor = budgetEfficiency >= 0 ? 'var(--success-600)' : 'var(--danger-600)';
+        
+        return `
         <div class="pm-performance-item">
             <div class="pm-info">
-                <div class="pm-avatar ${pm.toLowerCase()}">${pm.charAt(0)}</div>
+                <div class="pm-avatar ${pm.toLowerCase()}" style="background: var(--primary-100); color: var(--primary-700); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">${pm.charAt(0)}</div>
                 <div>
                     <div style="font-weight: 600; color: var(--gray-800);">${pm}</div>
-                    <div style="font-size: var(--text-xs); color: var(--gray-600);">${stats.projects} projects</div>
+                    <div style="font-size: var(--text-xs); color: var(--gray-600);">${stats.projects} projects • $${(stats.totalBudget || 0).toLocaleString()} total</div>
                 </div>
             </div>
             <div class="pm-stats">
@@ -1622,9 +1819,15 @@ function renderPerformanceChart() {
                     <div class="pm-stat-value">${stats.completedThisMonth}</div>
                     <div class="pm-stat-label">Completed</div>
                 </div>
+                <div class="pm-stat">
+                    <div class="pm-stat-value" style="color: ${efficiencyColor};">
+                        ${budgetEfficiency >= 0 ? '+' : ''}${budgetEfficiency.toFixed(1)}%
+                    </div>
+                    <div class="pm-stat-label">Budget Efficiency</div>
+                </div>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 // Render financial table
@@ -1632,28 +1835,48 @@ function renderFinancialTable() {
     const container = document.getElementById('financial-table');
     if (!container) return;
     
+    if (!projects || projects.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                <i class="fas fa-chart-line" style="font-size: 2rem; margin-bottom: 1rem; color: var(--gray-400);"></i>
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">No Financial Data Yet</div>
+                <div style="font-size: var(--text-sm);">Financial analytics will appear once you add projects with budget information.</div>
+            </div>
+        `;
+        return;
+    }
+    
     container.innerHTML = `
         <table class="analytics-table">
             <thead>
                 <tr>
                     <th>Project</th>
+                    <th>PM</th>
                     <th>Budget</th>
                     <th>Spent</th>
                     <th>Remaining</th>
+                    <th>Budget Used</th>
                     <th>Progress</th>
+                    <th>Phase</th>
                 </tr>
             </thead>
             <tbody>
                 ${projects.map(project => {
                     const remaining = (project.budget || 0) - (project.spent || 0);
-                    const spentPercent = Math.round(((project.spent || 0) / (project.budget || 1)) * 100);
+                    const budgetUsedPercent = project.budget ? Math.round(((project.spent || 0) / project.budget) * 100) : 0;
+                    const isOverBudget = budgetUsedPercent > project.progress;
+                    
                     return `
                         <tr>
-                            <td>${project.name}</td>
+                            <td style="font-weight: 600;">${project.name}</td>
+                            <td>${project.pm}</td>
                             <td>$${(project.budget || 0).toLocaleString()}</td>
                             <td>$${(project.spent || 0).toLocaleString()}</td>
-                            <td style="color: ${remaining < 0 ? 'var(--danger-600)' : 'var(--success-600)'}">
+                            <td style="color: ${remaining < 0 ? 'var(--danger-600)' : 'var(--success-600)'}; font-weight: 600;">
                                 $${remaining.toLocaleString()}
+                            </td>
+                            <td style="color: ${isOverBudget ? 'var(--danger-600)' : 'var(--gray-700)'}; font-weight: 600;">
+                                ${budgetUsedPercent}%
                             </td>
                             <td>
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -1662,6 +1885,11 @@ function renderFinancialTable() {
                                     </div>
                                     <span style="min-width: 35px; font-size: var(--text-xs);">${project.progress}%</span>
                                 </div>
+                            </td>
+                            <td>
+                                <span class="phase-badge" style="padding: 0.25rem 0.5rem; background: var(--primary-100); color: var(--primary-700); border-radius: var(--radius-sm); font-size: var(--text-xs);">
+                                    ${project.phase || 'In Progress'}
+                                </span>
                             </td>
                         </tr>
                     `;
@@ -1708,40 +1936,58 @@ function renderTrendsTable() {
 
 // Smart Notifications System
 function updateNotifications() {
-    const urgentItems = hotTicketItems.filter(item => getItemStatus(item) === 'urgent');
-    const overdueItems = hotTicketItems.filter(item => getItemStatus(item) === 'overdue');
-    const milestones = checkProjectMilestones();
+    console.log('Updating notifications...');
     
-    // Update notification counts
-    document.getElementById('urgent-notification-count').textContent = urgentItems.length;
-    document.getElementById('overdue-notification-count').textContent = overdueItems.length;
-    document.getElementById('milestone-notification-count').textContent = milestones.length;
-    
-    // Render notification lists
-    renderNotificationList('urgent-notifications-list', urgentItems.map(item => ({
-        id: item.id,
-        title: `${getItemTypeDisplay(item.type)} - ${getItemTitle(item)}`,
-        content: `Due ${formatRelativeTime(item.dueDate)} - Project: ${getProjectName(item.project)}`,
-        time: formatRelativeTime(item.dueDate),
-        type: 'urgent'
-    })));
-    
-    renderNotificationList('overdue-notifications-list', overdueItems.map(item => ({
-        id: item.id,
-        title: `${getItemTypeDisplay(item.type)} - ${getItemTitle(item)}`,
-        content: `${Math.abs(getDaysUntilDue(item.dueDate))} days overdue - Project: ${getProjectName(item.project)}`,
-        time: formatRelativeTime(item.dueDate),
-        type: 'overdue'
-    })));
-    
-    renderNotificationList('milestone-notifications-list', milestones);
-    
-    // Browser notifications for urgent items (if enabled)
-    if (urgentItems.length > 0 && Notification.permission === 'granted') {
-        const notificationSettings = getNotificationSettings();
-        if (notificationSettings.browserNotifications) {
-            showBrowserNotification(urgentItems[0]);
+    try {
+        const urgentItems = hotTicketItems.filter(item => getItemStatus(item) === 'urgent');
+        const overdueItems = hotTicketItems.filter(item => getItemStatus(item) === 'overdue');
+        const milestones = checkProjectMilestones();
+        
+        console.log('Notification counts:', {
+            urgent: urgentItems.length,
+            overdue: overdueItems.length,
+            milestones: milestones.length
+        });
+        
+        // Update notification counts
+        const urgentCountEl = document.getElementById('urgent-notification-count');
+        const overdueCountEl = document.getElementById('overdue-notification-count');
+        const milestoneCountEl = document.getElementById('milestone-notification-count');
+        
+        if (urgentCountEl) urgentCountEl.textContent = urgentItems.length;
+        if (overdueCountEl) overdueCountEl.textContent = overdueItems.length;
+        if (milestoneCountEl) milestoneCountEl.textContent = milestones.length;
+        
+        // Render notification lists
+        renderNotificationList('urgent-notifications-list', urgentItems.map(item => ({
+            id: item.id,
+            title: `${getItemTypeDisplay(item.type)} - ${getItemTitle(item)}`,
+            content: `Due ${formatRelativeTime(item.dueDate)} - Project: ${getProjectName(item.project)}`,
+            time: formatRelativeTime(item.dueDate),
+            type: 'urgent'
+        })));
+        
+        renderNotificationList('overdue-notifications-list', overdueItems.map(item => ({
+            id: item.id,
+            title: `${getItemTypeDisplay(item.type)} - ${getItemTitle(item)}`,
+            content: `${Math.abs(getDaysUntilDue(item.dueDate))} days overdue - Project: ${getProjectName(item.project)}`,
+            time: formatRelativeTime(item.dueDate),
+            type: 'overdue'
+        })));
+        
+        renderNotificationList('milestone-notifications-list', milestones);
+        
+        // Browser notifications for urgent items (if enabled)
+        if (urgentItems.length > 0 && Notification.permission === 'granted') {
+            const notificationSettings = getNotificationSettings();
+            if (notificationSettings.browserNotifications) {
+                showBrowserNotification(urgentItems[0]);
+            }
         }
+        
+        console.log('Notifications updated successfully');
+    } catch (error) {
+        console.error('Error updating notifications:', error);
     }
 }
 
@@ -1817,18 +2063,28 @@ function calculateCompletionTrend() {
 }
 
 function calculatePMStats() {
+    if (!projects || projects.length === 0) {
+        return {};
+    }
+    
     const stats = {};
     
-    ['Makayla', 'Ben', 'Jeremy'].forEach(pm => {
+    // Get unique PMs from actual projects data
+    const uniquePMs = [...new Set(projects.map(p => p.pm))];
+    
+    uniquePMs.forEach(pm => {
         const pmProjects = projects.filter(p => p.pm === pm);
         const pmItems = hotTicketItems.filter(item => {
             const project = projects.find(p => p.id === item.project);
             return project && project.pm === pm;
         });
         
+        const totalProgress = pmProjects.reduce((sum, p) => sum + (p.progress || 0), 0);
+        const avgProgress = pmProjects.length > 0 ? totalProgress / pmProjects.length : 0;
+        
         stats[pm] = {
             projects: pmProjects.length,
-            avgProgress: pmProjects.reduce((sum, p) => sum + (p.progress || 0), 0) / pmProjects.length || 0,
+            avgProgress: avgProgress,
             activeItems: pmItems.filter(item => item.status !== 'completed').length,
             completedThisMonth: pmItems.filter(item => {
                 if (item.status !== 'completed') return false;
@@ -1836,7 +2092,9 @@ function calculatePMStats() {
                 const thisMonth = new Date();
                 return completedDate.getMonth() === thisMonth.getMonth() && 
                        completedDate.getFullYear() === thisMonth.getFullYear();
-            }).length
+            }).length,
+            totalBudget: pmProjects.reduce((sum, p) => sum + (p.budget || 0), 0),
+            totalSpent: pmProjects.reduce((sum, p) => sum + (p.spent || 0), 0)
         };
     });
     
@@ -1863,6 +2121,10 @@ function calculateItemTrends() {
 
 function checkProjectMilestones() {
     const milestones = [];
+    
+    if (!projects || projects.length === 0) {
+        return milestones;
+    }
     
     projects.forEach(project => {
         if (project.progress >= 25 && project.progress < 30) {
@@ -2044,7 +2306,26 @@ function exportAnalytics() {
 
 // Initialize analytics when the page loads
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('MHC Project Tracker initialized');
+    console.log('DOM Content Loaded - MHC Project Tracker initialized');
+    
+    // Check if all required DOM elements exist
+    const requiredElements = [
+        'analytics-section',
+        'total-budget',
+        'avg-progress',
+        'progress-charts',
+        'performance-chart',
+        'financial-table',
+        'urgent-notification-count',
+        'overdue-notification-count'
+    ];
+    
+    const missingElements = requiredElements.filter(id => !document.getElementById(id) && !document.querySelector(`.${id}`));
+    if (missingElements.length > 0) {
+        console.error('Missing DOM elements:', missingElements);
+    } else {
+        console.log('All required DOM elements found');
+    }
     
     // Load data and render
     loadData();
@@ -2053,13 +2334,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize enhanced features
     setTimeout(() => {
+        // Initialize analytics regardless of whether projects exist
+        // This allows the system to work with real projects as they're added
+        console.log('Initializing analytics with projects count:', projects.length);
         initializeAnalytics();
-        loadSavedFilterSets();
+        loadSavedFilters();
         
         // Check for first-time user
         if (!localStorage.getItem('mhc_first_visit_done')) {
             showWelcomeMessage();
             localStorage.setItem('mhc_first_visit_done', 'true');
+        }
+        
+        console.log('Analytics initialized with projects:', projects.length);
+        
+        // Only show sample data message if no real projects exist
+        if (projects.length === 0) {
+            console.log('No projects found. Add real projects using the project management features.');
         }
     }, 1000);
 });
@@ -2094,7 +2385,7 @@ document.addEventListener('keydown', function(e) {
     // Ctrl/Cmd + A: Show analytics (when not in input)
     if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !e.target.matches('input, textarea')) {
         e.preventDefault();
-        const analyticsSection = document.getElementById('analytics-section');
+        const analyticsSection = document.querySelector('.analytics-section');
         if (analyticsSection) {
             analyticsSection.scrollIntoView({ behavior: 'smooth' });
         }
@@ -2126,7 +2417,7 @@ document.addEventListener('keydown', function(e) {
     // Ctrl/Cmd + B: Show notifications bell
     if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
-        const notificationsSection = document.getElementById('notifications');
+        const notificationsSection = document.querySelector('.notifications-section');
         if (notificationsSection) {
             notificationsSection.scrollIntoView({ behavior: 'smooth' });
         }

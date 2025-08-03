@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="description" content="MHC Construction Project Tracker - Manage hot ticket items, track project progress, and streamline construction workflows.">
     <meta name="theme-color" content="#1e3a8a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="MHC Tracker">
     
     <title>MHC Project Tracker</title>
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
+    <!-- <link rel="manifest" href="manifest.json"> -->
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="styles.css">
@@ -93,30 +93,6 @@
             </div>
         </div>
     </header>
-
-    <!-- Quick Stats Bar -->
-    <div class="stats-bar">
-        <div class="stat-item urgent">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span id="urgent-count">0</span>
-            <label>Urgent (24hrs)</label>
-        </div>
-        <div class="stat-item overdue">
-            <i class="fas fa-clock"></i>
-            <span id="overdue-count">0</span>
-            <label>Overdue</label>
-        </div>
-        <div class="stat-item total">
-            <i class="fas fa-list"></i>
-            <span id="total-count">0</span>
-            <label>Total Items</label>
-        </div>
-        <div class="stat-item completed">
-            <i class="fas fa-check-circle"></i>
-            <span id="completed-count">0</span>
-            <label>Completed Today</label>
-        </div>
-    </div>
 
     <!-- Main Dashboard -->
     <main class="main-content">
@@ -456,7 +432,12 @@
 
         <!-- Projects Grid -->
         <section class="projects-section">
-            <h2><i class="fas fa-building"></i> Active Projects</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2><i class="fas fa-building"></i> Active Projects</h2>
+                <button class="btn btn-primary" onclick="addNewProject()">
+                    <i class="fas fa-plus"></i> Add New Project
+                </button>
+            </div>
             <div class="projects-grid" id="projects-grid">
                 <!-- Projects will be populated by JavaScript -->
             </div>
@@ -1087,7 +1068,7 @@
     <div id="project-edit-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-building"></i> Edit Project</h3>
+                <h3><i class="fas fa-building"></i> <span id="project-modal-title">Edit Project</span></h3>
                 <span class="close" onclick="closeModal('project-edit-modal')">&times;</span>
             </div>
             <form id="project-edit-form" onsubmit="saveProject(event)">
@@ -1131,6 +1112,26 @@
                     <div class="form-group">
                         <label>Expected End Date:</label>
                         <input type="date" name="endDate" id="edit-project-end-date">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Budget ($):</label>
+                        <input type="number" name="budget" id="edit-project-budget" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Spent ($):</label>
+                        <input type="number" name="spent" id="edit-project-spent" step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Progress (%):</label>
+                        <input type="number" name="progress" id="edit-project-progress" min="0" max="100" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Current Phase:</label>
+                        <input type="text" name="phase" id="edit-project-phase" placeholder="e.g., Planning, Design, Construction">
                     </div>
                 </div>
                 <div class="form-group full-width">
