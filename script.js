@@ -210,7 +210,9 @@ function initializeData() {
             pm: 'Makayla',
             status: 'active',
             startDate: '2024-01-15',
-            endDate: '2024-08-30'
+            endDate: '2024-08-30',
+            description: 'Modern office complex with 150,000 sq ft of space',
+            notes: 'Client requested eco-friendly materials'
         },
         {
             id: 'makayla-job2',
@@ -218,7 +220,9 @@ function initializeData() {
             pm: 'Makayla',
             status: 'active',
             startDate: '2024-03-01',
-            endDate: '2024-10-15'
+            endDate: '2024-10-15',
+            description: 'Shopping center with 12 retail units',
+            notes: 'Phase 1 completion targeted for September'
         },
         {
             id: 'ben-job1',
@@ -226,7 +230,9 @@ function initializeData() {
             pm: 'Ben',
             status: 'active',
             startDate: '2024-02-01',
-            endDate: '2024-09-30'
+            endDate: '2024-09-30',
+            description: 'Expanding existing warehouse by 50,000 sq ft',
+            notes: 'Working around operational constraints'
         },
         {
             id: 'ben-job2',
@@ -234,7 +240,9 @@ function initializeData() {
             pm: 'Ben',
             status: 'active',
             startDate: '2024-04-01',
-            endDate: '2024-12-15'
+            endDate: '2024-12-15',
+            description: 'New manufacturing facility with clean room requirements',
+            notes: 'Specialized HVAC systems required'
         },
         {
             id: 'ben-job3',
@@ -242,7 +250,9 @@ function initializeData() {
             pm: 'Ben',
             status: 'active',
             startDate: '2024-05-15',
-            endDate: '2025-01-30'
+            endDate: '2025-01-30',
+            description: 'Automated distribution center with conveyor systems',
+            notes: 'Integration with existing logistics network'
         },
         {
             id: 'jeremy-darigold',
@@ -250,7 +260,9 @@ function initializeData() {
             pm: 'Jeremy',
             status: 'active',
             startDate: '2024-01-01',
-            endDate: '2024-11-30'
+            endDate: '2024-11-30',
+            description: 'Dairy processing facility upgrade and expansion',
+            notes: 'Food safety compliance critical'
         }
     ];
 
@@ -381,6 +393,7 @@ function renderDashboard() {
     renderProjects();
     renderItems();
     updateStats();
+    updateProjectDropdowns();
 }
 
 // Render projects grid
@@ -407,13 +420,19 @@ function renderProjects() {
         
         const projectCard = document.createElement('div');
         projectCard.className = `project-card ${project.pm.toLowerCase()}`;
+        projectCard.style.cursor = 'pointer';
+        projectCard.setAttribute('data-project-id', project.id);
+        projectCard.onclick = () => openProjectEditor(project.id);
         projectCard.innerHTML = `
             <div class="project-header">
                 <div>
                     <div class="project-title">${project.name}</div>
                     <div class="project-pm">PM: ${project.pm}</div>
                 </div>
-                <div class="project-status status-${statusClass}">${statusText}</div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="project-status status-${statusClass}">${statusText}</div>
+                    <i class="fas fa-edit" style="color: var(--gray-400); font-size: 0.875rem;" title="Click to edit project"></i>
+                </div>
             </div>
             <div class="project-stats">
                 <div class="project-stat">
@@ -947,6 +966,96 @@ function restoreData(event) {
         }
     };
     reader.readAsText(file);
+}
+
+// Project Management Functions
+function openProjectEditor(projectId) {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) {
+        showNotification('Project not found', 'error');
+        return;
+    }
+    
+    // Populate form fields
+    document.getElementById('edit-project-id').value = project.id;
+    document.getElementById('edit-project-name').value = project.name || '';
+    document.getElementById('edit-project-pm').value = project.pm || '';
+    document.getElementById('edit-project-status').value = project.status || 'active';
+    document.getElementById('edit-project-key').value = project.id || '';
+    document.getElementById('edit-project-start-date').value = project.startDate || '';
+    document.getElementById('edit-project-end-date').value = project.endDate || '';
+    document.getElementById('edit-project-description').value = project.description || '';
+    document.getElementById('edit-project-notes').value = project.notes || '';
+    
+    // Show modal
+    document.getElementById('project-edit-modal').style.display = 'block';
+}
+
+function saveProject(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const projectId = formData.get('projectId');
+    
+    const updatedProject = {
+        id: projectId,
+        name: formData.get('name'),
+        pm: formData.get('pm'),
+        status: formData.get('status'),
+        startDate: formData.get('startDate'),
+        endDate: formData.get('endDate'),
+        description: formData.get('description'),
+        notes: formData.get('notes')
+    };
+    
+    // Find and update the project
+    const projectIndex = projects.findIndex(p => p.id === projectId);
+    if (projectIndex === -1) {
+        showNotification('Project not found', 'error');
+        return;
+    }
+    
+    // Preserve the original ID and merge with updates
+    projects[projectIndex] = { ...projects[projectIndex], ...updatedProject };
+    
+    // Save to localStorage
+    saveData();
+    
+    // Update the dropdown options in all forms if PM changed
+    updateProjectDropdowns();
+    
+    // Re-render the dashboard
+    renderDashboard();
+    
+    // Close modal and show success message
+    closeModal('project-edit-modal');
+    showNotification('Project updated successfully!', 'success');
+}
+
+function updateProjectDropdowns() {
+    // Update all project dropdowns in forms
+    const projectSelects = document.querySelectorAll('select[name="project"]');
+    
+    projectSelects.forEach(select => {
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Select Project</option>';
+        
+        projects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project.id;
+            option.textContent = `${project.pm} - ${project.name}`;
+            if (project.status !== 'active') {
+                option.textContent += ` (${project.status})`;
+                option.disabled = project.status === 'completed' || project.status === 'cancelled';
+            }
+            select.appendChild(option);
+        });
+        
+        // Restore previous selection if it still exists
+        if (currentValue) {
+            select.value = currentValue;
+        }
+    });
 }
 
 // Notification system

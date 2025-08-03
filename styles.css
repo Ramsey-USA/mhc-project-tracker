@@ -815,10 +815,16 @@ a:hover {
 .project-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-xl);
+    cursor: pointer;
 }
 
 .project-card:hover::before {
     opacity: 1;
+}
+
+.project-card:active {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
 }
 
 .project-card.makayla {
