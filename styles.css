@@ -453,7 +453,7 @@ a:hover {
     padding: 0 var(--space-8);
 }
 
-/* Enhanced Quick Add Section */
+/* Enhanced Quick Add Section with Carousel */
 .quick-add-section {
     background: var(--white);
     padding: var(--space-8);
@@ -477,12 +477,118 @@ a:hover {
     color: var(--primary-500);
 }
 
-.quick-add-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--space-4);
+/* Carousel Container */
+.carousel-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
 }
 
+.carousel-wrapper {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.quick-add-buttons {
+    display: flex;
+    gap: var(--space-4);
+    transition: transform var(--transition-slow) cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+}
+
+/* Touch scroll support for mobile */
+@media (max-width: 768px) {
+    .carousel-wrapper {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .carousel-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .quick-add-buttons {
+        transition: none;
+        transform: none !important;
+    }
+}
+
+/* Carousel Navigation */
+.carousel-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+}
+
+.carousel-btn {
+    background: var(--white);
+    border: 2px solid var(--gray-300);
+    border-radius: var(--radius-full);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    color: var(--gray-600);
+    font-size: var(--text-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.carousel-btn:hover {
+    background: var(--primary-50);
+    border-color: var(--primary-500);
+    color: var(--primary-600);
+    box-shadow: var(--shadow-md);
+}
+
+.carousel-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--gray-100);
+    border-color: var(--gray-200);
+}
+
+.carousel-btn:disabled:hover {
+    background: var(--gray-100);
+    border-color: var(--gray-200);
+    color: var(--gray-400);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Carousel Indicators */
+.carousel-indicators {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+}
+
+.carousel-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    background: var(--gray-300);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.carousel-indicator.active {
+    background: var(--primary-500);
+    transform: scale(1.2);
+}
+
+.carousel-indicator:hover {
+    background: var(--primary-400);
+}
+
+/* Enhanced Quick Buttons for Carousel */
 .quick-btn {
     padding: var(--space-6);
     border: 2px solid var(--gray-200);
@@ -497,6 +603,8 @@ a:hover {
     text-align: center;
     position: relative;
     overflow: hidden;
+    min-width: 200px;
+    flex-shrink: 0;
 }
 
 .quick-btn::before {
@@ -1107,9 +1215,16 @@ a:hover {
         grid-template-columns: 1fr;
     }
 
-    .quick-add-buttons {
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--space-3);
+    /* Mobile carousel adjustments */
+    .quick-btn {
+        min-width: 180px;
+        padding: var(--space-4);
+    }
+
+    .carousel-btn {
+        width: 40px;
+        height: 40px;
+        font-size: var(--text-base);
     }
 
     .form-row {
@@ -1147,16 +1262,19 @@ a:hover {
         margin-top: calc(var(--space-2) * -1);
     }
 
-    .quick-add-buttons {
-        grid-template-columns: 1fr;
-    }
-
+    /* Small screen carousel */
     .quick-btn {
-        padding: var(--space-4);
+        min-width: 160px;
+        padding: var(--space-3);
     }
 
     .quick-btn i {
         font-size: var(--text-3xl);
+    }
+
+    .carousel-nav {
+        gap: var(--space-2);
+        margin-top: var(--space-4);
     }
 
     .notification {

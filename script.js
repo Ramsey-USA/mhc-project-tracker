@@ -1,4 +1,173 @@
-// MHC Project Tracker - JavaScript Functionality
+// MHC Projec// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    initializeData();
+    loadData();
+    renderDashboard();
+    updateStats();
+    initializeCarousel();
+    
+    // Set default dates
+    const today = new Date().toISOString().split('T')[0];
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    // Set default due dates in forms
+    document.querySelectorAll('input[name="dueDate"]').forEach(input => {
+        if (!input.value) input.value = nextWeek;
+    });
+    
+    document.querySelectorAll('input[name="date"], input[name="initiatedDate"]').forEach(input => {
+        if (!input.value) input.value = today;
+    });
+});
+
+// Carousel Functionality
+let currentCarouselIndex = 0;
+let itemsPerView = 3;
+let totalItems = 6;
+
+function initializeCarousel() {
+    updateItemsPerView();
+    createCarouselIndicators();
+    updateCarouselView();
+    
+    // Add resize listener
+    window.addEventListener('resize', () => {
+        updateItemsPerView();
+        updateCarouselView();
+        createCarouselIndicators();
+    });
+    
+    // Add keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.target.closest('.quick-add-section')) {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                moveCarousel(-1);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                moveCarousel(1);
+            }
+        }
+    });
+    
+    // Add touch/swipe support for mobile
+    addTouchSupport();
+}
+
+function addTouchSupport() {
+    const carousel = document.getElementById('quick-add-carousel');
+    if (!carousel) return;
+    
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
+    
+    carousel.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+    });
+    
+    carousel.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        currentX = e.touches[0].clientX;
+    });
+    
+    carousel.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        const diff = startX - currentX;
+        const threshold = 50;
+        
+        if (Math.abs(diff) > threshold) {
+            if (diff > 0) {
+                moveCarousel(1); // Swipe left - move forward
+            } else {
+                moveCarousel(-1); // Swipe right - move backward
+            }
+        }
+    });
+}
+
+function updateItemsPerView() {
+    const width = window.innerWidth;
+    if (width <= 480) {
+        itemsPerView = 1;
+    } else if (width <= 768) {
+        itemsPerView = 2;
+    } else if (width <= 1024) {
+        itemsPerView = 3;
+    } else {
+        itemsPerView = Math.min(4, totalItems);
+    }
+}
+
+function createCarouselIndicators() {
+    const indicatorsContainer = document.getElementById('carousel-indicators');
+    if (!indicatorsContainer) return;
+    
+    const totalPages = Math.ceil(totalItems / itemsPerView);
+    indicatorsContainer.innerHTML = '';
+    
+    for (let i = 0; i < totalPages; i++) {
+        const indicator = document.createElement('div');
+        indicator.className = `carousel-indicator ${i === Math.floor(currentCarouselIndex / itemsPerView) ? 'active' : ''}`;
+        indicator.onclick = () => goToCarouselPage(i);
+        indicatorsContainer.appendChild(indicator);
+    }
+}
+
+function updateCarouselView() {
+    const carousel = document.getElementById('quick-add-carousel');
+    const prevBtn = document.getElementById('carousel-prev');
+    const nextBtn = document.getElementById('carousel-next');
+    
+    if (!carousel) return;
+    
+    // Calculate transform
+    const itemWidth = 200 + 16; // button width + gap
+    const offset = currentCarouselIndex * itemWidth;
+    carousel.style.transform = `translateX(-${offset}px)`;
+    
+    // Update button states
+    if (prevBtn) {
+        prevBtn.disabled = currentCarouselIndex === 0;
+    }
+    
+    if (nextBtn) {
+        nextBtn.disabled = currentCarouselIndex >= totalItems - itemsPerView;
+    }
+    
+    // Update indicators
+    updateCarouselIndicators();
+}
+
+function updateCarouselIndicators() {
+    const indicators = document.querySelectorAll('.carousel-indicator');
+    const currentPage = Math.floor(currentCarouselIndex / itemsPerView);
+    
+    indicators.forEach((indicator, index) => {
+        indicator.classList.toggle('active', index === currentPage);
+    });
+}
+
+function moveCarousel(direction) {
+    const maxIndex = totalItems - itemsPerView;
+    
+    if (direction > 0 && currentCarouselIndex < maxIndex) {
+        currentCarouselIndex = Math.min(currentCarouselIndex + 1, maxIndex);
+    } else if (direction < 0 && currentCarouselIndex > 0) {
+        currentCarouselIndex = Math.max(currentCarouselIndex - 1, 0);
+    }
+    
+    updateCarouselView();
+}
+
+function goToCarouselPage(pageIndex) {
+    currentCarouselIndex = pageIndex * itemsPerView;
+    currentCarouselIndex = Math.min(currentCarouselIndex, totalItems - itemsPerView);
+    updateCarouselView();
+}
 
 // Global Data Storage
 let hotTicketItems = [];
