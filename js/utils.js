@@ -1,6 +1,11 @@
 // Utility for selecting elements
 export function selectElement(selector) {
-    return document.querySelector(selector);
+    const element = document.querySelector(selector);
+    if (!element) {
+        console.warn(`Element not found: ${selector}`);
+        return null;
+    }
+    return element;
 }
 
 // Utility for creating elements

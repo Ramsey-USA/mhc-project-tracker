@@ -9,6 +9,7 @@ import { initializeProjects } from './js/projects.js';
 import { initializeFilters } from './js/filters.js';
 import { initializeReportBuilder } from './js/reportBuilder.js';
 import { initializeSyncStatus } from './js/syncStatus.js';
+import './js/global.js'; // Import global functions for onclick handlers
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Initializing MHC Project Tracker Dashboard...');
