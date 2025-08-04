@@ -1,5 +1,7 @@
 import { selectElement, createElement, appendChildren } from './utils.js';
 import { getFinancialData, getProgressData, getPerformanceData, getHotTicketItems, getProjectsData } from './data.js';
+import { initializeCharts } from './charts.js';
+import { initializeFilters } from './filters.js';
 
 // Function to update financial metrics
 export function updateFinancialMetrics() {
@@ -63,6 +65,7 @@ export function initializeCarousel() {
     const carousel = selectElement('#quick-add-carousel');
     const prevBtn = selectElement('#carousel-prev');
     const nextBtn = selectElement('#carousel-next');
+    const indicatorsContainer = selectElement('#carousel-indicators');
     
     if (!carousel || !prevBtn || !nextBtn) {
         console.warn('Carousel elements not found, skipping carousel initialization');
@@ -72,10 +75,32 @@ export function initializeCarousel() {
     const items = carousel.children;
     const totalItems = items.length;
 
+    // Create indicators
+    if (indicatorsContainer && totalItems > 1) {
+        indicatorsContainer.innerHTML = '';
+        for (let i = 0; i < totalItems; i++) {
+            const indicator = document.createElement('div');
+            indicator.className = 'carousel-indicator';
+            indicator.addEventListener('click', () => {
+                currentIndex = i;
+                updateCarousel();
+            });
+            indicatorsContainer.appendChild(indicator);
+        }
+    }
+
     function updateCarousel() {
         Array.from(items).forEach((item, index) => {
             item.style.display = index === currentIndex ? 'block' : 'none';
         });
+        
+        // Update indicators
+        if (indicatorsContainer) {
+            const indicators = indicatorsContainer.children;
+            Array.from(indicators).forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentIndex);
+            });
+        }
     }
 
     prevBtn.addEventListener('click', () => {
@@ -345,6 +370,8 @@ export function initializeDashboard() {
     updateEfficiencyMetrics();
     initializeCarousel();
     populateHotTicketItems();
+    initializeCharts();
+    initializeFilters();
 
     console.log('Dashboard initialized');
 }

@@ -3,6 +3,7 @@
 
 // Export/Import functions (needed for module system)
 import { initializeDashboard } from './ui.js';
+import { filterItems, performSearch, clearFilters } from './filters.js';
 
 // Global utility functions for modal handling
 window.showAddModal = function(type) {
@@ -241,4 +242,35 @@ window.updateAnalytics = function() {
 window.updateEmailSettings = function() {
     console.log('Updating email settings...');
     // Email settings functionality would go here
+};
+
+// Filter and search functions
+window.filterItems = filterItems;
+window.performSearch = performSearch;
+window.clearFilters = clearFilters;
+
+// Item action functions
+window.viewItem = function(itemId) {
+    console.log('Viewing item:', itemId);
+    alert(`View item ${itemId} - functionality coming soon!`);
+};
+
+window.editItem = function(itemId) {
+    console.log('Editing item:', itemId);
+    alert(`Edit item ${itemId} - functionality coming soon!`);
+};
+
+window.completeItem = function(itemId) {
+    console.log('Completing item:', itemId);
+    alert(`Complete item ${itemId} - functionality coming soon!`);
+};
+
+window.viewProject = function(projectId) {
+    console.log('Viewing project:', projectId);
+    alert(`View project ${projectId} - functionality coming soon!`);
+};
+
+window.editProject = function(projectId) {
+    console.log('Editing project:', projectId);
+    alert(`Edit project ${projectId} - functionality coming soon!`);
 };

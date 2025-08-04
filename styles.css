@@ -3903,3 +3903,282 @@ input:focus, select:focus, textarea:focus {
         flex-wrap: wrap;
     }
 }
+
+/* Analytics Tables */
+.analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-table th,
+.analytics-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.analytics-table th {
+    background-color: #f8fafc;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.analytics-table td {
+    color: #4b5563;
+    font-size: 0.875rem;
+}
+
+.analytics-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.analytics-table .text-success {
+    color: #10b981 !important;
+    font-weight: 600;
+}
+
+.analytics-table .text-warning {
+    color: #f59e0b !important;
+    font-weight: 600;
+}
+
+.analytics-table .text-danger {
+    color: #ef4444 !important;
+    font-weight: 600;
+}
+
+.analytics-table .text-primary {
+    color: #3b82f6 !important;
+    font-weight: 600;
+}
+
+.analytics-table .text-info {
+    color: #0ea5e9 !important;
+    font-weight: 600;
+}
+
+/* Progress Charts */
+.project-progress-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    gap: 12px;
+}
+
+.project-progress-info {
+    flex: 1;
+    min-width: 150px;
+}
+
+.project-progress-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.875rem;
+    margin-bottom: 2px;
+}
+
+.project-progress-details {
+    display: flex;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.pm-name {
+    color: #3b82f6;
+}
+
+.project-phase {
+    color: #9ca3af;
+}
+
+.progress-bar-container {
+    flex: 2;
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-bar.active {
+    background-color: #10b981;
+}
+
+.progress-bar.warning {
+    background-color: #f59e0b;
+}
+
+.progress-bar.success {
+    background-color: #3b82f6;
+}
+
+.progress-percentage {
+    min-width: 40px;
+    text-align: right;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+/* PM Performance Items */
+.pm-performance-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    margin-bottom: 12px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    gap: 16px;
+}
+
+.pm-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 120px;
+}
+
+.pm-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+    font-size: 1rem;
+}
+
+.pm-avatar.sarah {
+    background-color: #3b82f6;
+}
+
+.pm-avatar.mike {
+    background-color: #10b981;
+}
+
+.pm-avatar.emily {
+    background-color: #f59e0b;
+}
+
+.pm-avatar.john {
+    background-color: #ef4444;
+}
+
+.pm-details h4 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.pm-details span {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.pm-stats {
+    display: flex;
+    gap: 24px;
+    flex: 1;
+}
+
+.pm-stat {
+    text-align: center;
+    min-width: 70px;
+}
+
+.pm-stat-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 2px;
+}
+
+.pm-stat.alert .pm-stat-value {
+    color: #ef4444;
+}
+
+.pm-stat-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+/* Chart containers */
+#progress-charts,
+#performance-chart {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 200px;
+}
+
+#financial-table,
+#trends-table {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+    min-height: 200px;
+}
+
+/* Carousel Indicators */
+.carousel-indicators {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.carousel-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.carousel-indicator:hover {
+    background-color: #94a3b8;
+}
+
+.carousel-indicator.active {
+    background-color: #3b82f6;
+    transform: scale(1.2);
+}
+
+/* No items message styling */
+.no-items-message {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+}
+
+.no-items-message p {
+    margin-bottom: 16px;
+    font-size: 1rem;
+}
+
+.no-items-message .btn {
+    margin-top: 8px;
+}
